@@ -1,5 +1,6 @@
 #include "PhysicsEngine.h"
 using namespace physx;
+using namespace std;
 
 PhysicsEngine::PhysicsEngine():
 	updateThread(nullptr),
@@ -24,21 +25,21 @@ PhysicsEngine::PhysicsEngine():
 
 	scene = physics->createScene(PxSceneDesc(tolScale));
 
-	updateThread = new std::thread(updateLoop, this);
+	updateThread = new thread(updateLoop, this);
 }
 
 void PhysicsEngine::updateLoop(PhysicsEngine *pe)
 {
 	if (pe == nullptr)
 		return;
-	std::unique_lock<std::mutex> lock(pe->engineMutex);
+	unique_lock<mutex> lock(pe->engineMutex);
 	while (!pe->quit)
 	{
 		lock.unlock();
-		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+		chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 		pe->update();
-		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-		std::this_thread::sleep_for(std::chrono::milliseconds(long(1000 * pe->simulationPeriod)) - (end-start));
+		chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
+		this_thread::sleep_for(chrono::milliseconds(long(1000 * pe->simulationPeriod)) - (end-start));
 
 		lock.lock();
 	}
@@ -46,7 +47,7 @@ void PhysicsEngine::updateLoop(PhysicsEngine *pe)
 
 void PhysicsEngine::update()
 {
-	std::unique_lock<std::mutex> lock(engineMutex);
+	unique_lock<mutex> lock(engineMutex);
 	if (scene != nullptr)
 	{
 		printf("Updating Scene\n");
@@ -61,7 +62,7 @@ PhysicsEngine::~PhysicsEngine()
 	{
 		printf("Shutting Down Update Thread\n");
 		{
-			std::unique_lock<std::mutex> lock(engineMutex);
+			unique_lock<mutex> lock(engineMutex);
 			quit = true;
 		}
 		updateThread->join();
