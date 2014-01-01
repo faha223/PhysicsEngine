@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PhysicsEntity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PhysicsEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

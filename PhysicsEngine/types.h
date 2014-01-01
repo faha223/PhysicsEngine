@@ -4,8 +4,12 @@
 #include <cstdint>
 #include <cstdio>
 #include <cmath>
+#include <PxShape.h>
 
-typedef float real;
+typedef physx::PxReal real;
+typedef physx::PxVec3 vec3;
+typedef physx::PxQuat quaternion;
+
 #define _PHYSICS_EPSILON 0.000001;
 
 #endif

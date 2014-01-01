@@ -12,21 +12,31 @@
 
 #include "PhysicsEngine.h"
 
+using namespace physx;
+using namespace std;
+
 void InitGL();
 void Display();
+void drawSphere(PxSphereGeometry sphere, PxTransform transform);
 void checkGLErrors();
 void LoadTexture();
 
 int main(int argc, char *argv[])
 {
 	// Create a Window and an OpenGL Context to render the simulation
+	vector<PxRigidActor*> actors;
 	SDL_Window *window;
 	SDL_GLContext context;
 	bool quit = false;
-	std::map<int, bool> Keyboard;
+	map<int, bool> Keyboard;
 
 	PhysicsEngine engine;
 	printf("Engine Created\n");
+
+	{
+		actors.push_back(engine.addCollisionSphere(vec3(-2.5f, 0.0f, -10.0f), 1.0f, 1.0f, vec3( 1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
+		actors.push_back(engine.addCollisionSphere(vec3( 2.5f, 0.0f, -10.0f), 1.0f, 1.0f, vec3(-1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
+	}
 	
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
 	{
@@ -82,6 +92,37 @@ int main(int argc, char *argv[])
 		}
 		
 		Display();
+		for (size_t i = 0; i < actors.size(); i++)
+		{
+			if (actors[i] != nullptr)
+			{
+				PxTransform transform = actors[i]->getGlobalPose();
+				uint32_t numShapes = actors[i]->getNbShapes();
+				if (numShapes != 0)
+				{
+					PxShape** shapes = new PxShape*[numShapes];
+					actors[i]->getShapes(shapes, numShapes, 0);
+					for (uint32_t j = 0; j < numShapes; j++)
+					{
+						PxSphereGeometry sphere;
+						PxCapsuleGeometry capsule;
+						PxTriangleMeshGeometry mesh;
+						if (shapes[j]->getSphereGeometry(sphere))
+						{
+							drawSphere(sphere, transform);
+						}
+						else if (shapes[j]->getCapsuleGeometry(capsule))
+						{
+							//drawCapsule(capsule, transform);
+						}
+						else if (shapes[j]->getTriangleMeshGeometry(mesh))
+						{
+							//drawMesh(mesh, transform);
+						}
+					}
+				}
+			}
+		}
 		SDL_GL_SwapWindow(window);
 		checkGLErrors();
 	}
@@ -112,22 +153,26 @@ void Display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-/*
-void drawSphere(const BoundingSphere &s)
+
+void drawSphere(PxSphereGeometry sphere, PxTransform transform)
 {
 	GLUquadric *w = gluNewQuadric();
 
 	glPushMatrix();
-	glTranslatef(s.position.x, s.position.y, s.position.z);
+	
+	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
+	vec3 axis = transform.q.getImaginaryPart();
+	glRotatef(transform.q.getAngle(), axis.x, axis.y, axis.z);
 
 	gluQuadricTexture(w, true);
-	gluSphere(w, s.radius, 32, 32);
+		
+	gluSphere(w, sphere.radius, 32, 32);
 
 	glPopMatrix();
 
 	gluDeleteQuadric(w);
 }
-*/
+
 void checkGLErrors()
 {
 	int glError = glGetError();

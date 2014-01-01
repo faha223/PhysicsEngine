@@ -81,8 +81,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MaterialProperties.h" />
     <ClInclude Include="PhysicsEngine.h" />
-    <ClInclude Include="PhysicsEntity.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
