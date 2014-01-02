@@ -12,12 +12,16 @@
 
 #include "PhysicsEngine.h"
 
+#define radToDeg($1) ($1*57.295779513082320876798154814105f)
+
 using namespace physx;
 using namespace std;
 
 void InitGL();
 void Display();
 void drawSphere(PxSphereGeometry sphere, PxTransform transform);
+void drawCapsule(PxCapsuleGeometry cap, PxTransform transform);
+void drawMesh(PxTriangleMeshGeometry mesh, PxTransform transform);
 void checkGLErrors();
 void LoadTexture();
 
@@ -33,8 +37,9 @@ int main(int argc, char *argv[])
 	PhysicsEngine engine;
 	printf("Engine Created\n");
 
-	actors.push_back(engine.addCollisionSphere(vec3(-2.5f, 0.0f, -10.0f), 1.0f, 1.0f, vec3( 2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
-	actors.push_back(engine.addCollisionSphere(vec3( 2.5f, 0.5f, -10.0f), 1.0f, 1.0f, vec3(-1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
+	actors.push_back(engine.addCollisionSphere(vec3(-5.0f, 0.0f, -10.0f), 1.0f, 1.0f, vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC));
+	actors.push_back(engine.addCollisionCapsule(vec3(0.0f, 0.0f, -10.0f), quaternion(0,1,0,0), 1.0f, 1.0f, 1.0f, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC));
+	actors.push_back(engine.addCollisionSphere(vec3(5.0f, 0.5f, -10.0f), 1.0f, 1.0f, vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC));
 	
 	//engine.setGravity(vec3(0.0f, -9.81f, 0.0f));
 
@@ -113,11 +118,11 @@ int main(int argc, char *argv[])
 						}
 						else if (shapes[j]->getCapsuleGeometry(capsule))
 						{
-							//drawCapsule(capsule, transform);
+							drawCapsule(capsule, transform);
 						}
 						else if (shapes[j]->getTriangleMeshGeometry(mesh))
 						{
-							//drawMesh(mesh, transform);
+							drawMesh(mesh, transform);
 						}
 					}
 				}
@@ -162,15 +167,57 @@ void drawSphere(PxSphereGeometry sphere, PxTransform transform)
 	
 	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
 	vec3 axis = transform.q.getImaginaryPart();
-	glRotatef(transform.q.getAngle(), axis.x, axis.y, axis.z);
+	glRotatef(radToDeg(transform.q.getAngle()), axis.x, axis.y, axis.z);
 
 	gluQuadricTexture(w, true);
 		
+	// Draw a standard sphere of the correct radius
 	gluSphere(w, sphere.radius, 32, 32);
 
 	glPopMatrix();
 
 	gluDeleteQuadric(w);
+}
+
+void drawCapsule(PxCapsuleGeometry cap, PxTransform transform)
+{
+	GLUquadric *w = gluNewQuadric();
+
+	glPushMatrix();
+
+	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
+	vec3 axis = transform.q.getImaginaryPart();
+	glRotatef(radToDeg(transform.q.getAngle()), axis.x, axis.y, axis.z);
+
+	gluQuadricTexture(w, true);
+
+	// Draw a standard capsule
+	glPushMatrix();
+	glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
+	glTranslatef(0.0f, 0.0f, cap.halfHeight);
+	gluSphere(w, cap.radius, 32, 32);
+	glTranslatef(0.0f, 0.0f, -2.0f*cap.halfHeight);
+	gluSphere(w, cap.radius, 32, 32);
+	gluCylinder(w, cap.radius, cap.radius, 2.0f*cap.halfHeight, 32.0f, 1.0f);
+	glPopMatrix();
+
+	glPopMatrix();
+
+	gluDeleteQuadric(w);
+
+}
+
+void drawMesh(PxTriangleMeshGeometry mesh, PxTransform transform)
+{
+	glPushMatrix();
+
+	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
+	vec3 axis = transform.q.getImaginaryPart();
+	glRotatef(radToDeg(transform.q.getAngle()), axis.x, axis.y, axis.z);
+
+	// Draw the mesh here
+	
+	glPopMatrix();
 }
 
 void checkGLErrors()

@@ -98,35 +98,77 @@ PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, real radius, real
 {
 	// Lock the thread while we add a collision sphere to the simulation
 	unique_lock<mutex> lock(engineMutex);
-	PxSphereGeometry geometry(radius);
-	switch (mat)
+	if (scene != nullptr)
 	{
-	case Wood:
-	case HollowPVC:
-	case SolidPVC:
-	case HollowSteel:
-	case SolidSteel:
-	case Concrete:
-		break;
-	default:
-		return nullptr;
+		PxSphereGeometry geometry(radius);
+		switch (mat)
+		{
+		case Wood:
+		case HollowPVC:
+		case SolidPVC:
+		case HollowSteel:
+		case SolidSteel:
+		case Concrete:
+			break;
+		default:
+			return nullptr;
+		}
+		if (isDynamic)
+		{
+			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position));
+			newActor->createShape(geometry, *mtls[mat]);
+			newActor->setMass(Mass);
+			newActor->setLinearVelocity(initialLinearVelocity, true);
+			newActor->setAngularVelocity(initialAngularVelocity, true);
+			scene->addActor(*newActor);
+			return newActor;
+		}
+		else
+		{
+			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position));
+			newActor->createShape(geometry, *mtls[mat]);
+			scene->addActor(*newActor);
+			return newActor;
+		}
 	}
-	if (isDynamic)
+	return nullptr;
+}
+
+PxRigidActor* PhysicsEngine::addCollisionCapsule(vec3 position, quaternion orientation, real halfHeight, real radius, real Mass, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
+{
+	unique_lock<mutex> lock(engineMutex);
+	if (scene != nullptr)
 	{
-		PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position));
-		newActor->createShape(geometry, *mtls[mat]);
-		newActor->setMass(Mass);
-		newActor->setLinearVelocity(initialLinearVelocity, true);
-		newActor->setAngularVelocity(initialAngularVelocity, true);
-		scene->addActor(*newActor);
-		return newActor;
-	}
-	else
-	{
-		PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position));
-		newActor->createShape(geometry, *mtls[mat]);
-		scene->addActor(*newActor);
-		return newActor;
+		PxCapsuleGeometry geometry(radius, halfHeight);
+		switch (mat)
+		{
+		case Wood:
+		case HollowPVC:
+		case SolidPVC:
+		case HollowSteel:
+		case SolidSteel:
+		case Concrete:
+			break;
+		default:
+			return nullptr;
+		}
+		if (isDynamic)
+		{
+			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
+			newActor->createShape(geometry, *mtls[mat]);
+			newActor->setMass(Mass);
+			newActor->setLinearVelocity(initialLinearVelocity, true);
+			newActor->setAngularVelocity(initialAngularVelocity, true);
+			scene->addActor(*newActor);
+			return newActor;
+		}
+		else
+		{
+			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
+			newActor->createShape(geometry, *mtls[mat]);
+			scene->addActor(*newActor);
+			return newActor;
+		}
 	}
 	return nullptr;
 }
