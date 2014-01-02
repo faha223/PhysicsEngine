@@ -33,11 +33,11 @@ int main(int argc, char *argv[])
 	PhysicsEngine engine;
 	printf("Engine Created\n");
 
-	{
-		actors.push_back(engine.addCollisionSphere(vec3(-2.5f, 0.0f, -10.0f), 1.0f, 1.0f, vec3( 1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
-		actors.push_back(engine.addCollisionSphere(vec3( 2.5f, 0.0f, -10.0f), 1.0f, 1.0f, vec3(-1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
-	}
+	actors.push_back(engine.addCollisionSphere(vec3(-2.5f, 0.0f, -10.0f), 1.0f, 1.0f, vec3( 2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
+	actors.push_back(engine.addCollisionSphere(vec3( 2.5f, 0.5f, -10.0f), 1.0f, 1.0f, vec3(-1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::Wood));
 	
+	//engine.setGravity(vec3(0.0f, -9.81f, 0.0f));
+
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
 	{
 		printf("SDL_Init Error: %s\n", SDL_GetError());

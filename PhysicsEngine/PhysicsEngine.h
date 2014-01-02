@@ -46,6 +46,8 @@ public:
 
 	physx::PxRigidActor* addCollisionSphere(vec3 position, real radius, real Mass = 1.0f, vec3 initialLinearVelocity = vec3(0.0f, 0.0f, 0.0f), vec3 initialAngularVelocity = vec3(0.0f, 0.0f, 0.0f), Material mat = Wood, bool isDynamic = true);		// Adds a collision Sphere to the scene, and returns a pointer to it so that the user can access its data
 
+	void getActors(std::vector<physx::PxRigidActor*> &actors);
+
 	void setGravity(vec3 gravity);
 
 	void setFrequency(uint32_t frequency);

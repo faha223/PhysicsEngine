@@ -14,7 +14,7 @@ PhysicsEngine::PhysicsEngine():
 {
 	static PxDefaultErrorCallback gDefaultErrorCallback;
 	static PxDefaultAllocator gDefaultAllocatorCallback;
-
+	
 	printf("Creating Tolerances Scale\n");
 	tolScale = PxTolerancesScale();
 	printf("Creating Foundation\n");
@@ -30,9 +30,21 @@ PhysicsEngine::PhysicsEngine():
 	mtls[SolidSteel] = physics->createMaterial(SOLIDSTEEL_STATIC_FRICTION, SOLIDSTEEL_DYNAMIC_FRICTION, SOLIDSTEEL_RESTITUTION);
 	mtls[Concrete] = physics->createMaterial(CONCRETE_STATIC_FRICTION, CONCRETE_DYNAMIC_FRICTION, CONCRETE_RESTITUTION);
 
-	simulationPeriod = 1.0f / float(engineFrequency);
+	simulationPeriod = 6.0f / float(engineFrequency);
+	PxSceneDesc sceneDesc = PxSceneDesc(tolScale);
 
-	scene = physics->createScene(PxSceneDesc(tolScale));
+	if (!sceneDesc.cpuDispatcher)
+	{
+		PxDefaultCpuDispatcher* mCpuDispatcher = PxDefaultCpuDispatcherCreate(1);
+		sceneDesc.cpuDispatcher = mCpuDispatcher;
+	}
+
+	if (!sceneDesc.filterShader)
+	{
+		sceneDesc.filterShader = PxDefaultSimulationFilterShader;  //Collision filter mechanism, strange name for it, very misleading
+	}
+
+	scene = physics->createScene(sceneDesc);
 
 	updateThread = new thread(updateLoop, this);
 }
@@ -61,7 +73,24 @@ void PhysicsEngine::update()
 	{
 		printf("Updating Scene\n");
 		scene->simulate(simulationPeriod);
-		scene->fetchResults();
+		scene->fetchResults(true);
+	}
+}
+
+void PhysicsEngine::getActors(vector<PxRigidActor*> &actors)
+{
+	unique_lock<mutex> lock(engineMutex);
+	if (scene != nullptr)
+	{
+		uint32_t count = scene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
+		PxActor **aa = new PxActor*[count];
+		scene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, aa, count);
+		actors.clear();
+		for (uint32_t i = 0; i < count; i++)
+		{
+			actors.push_back(aa[i]->isRigidActor());
+		}
+		delete[] aa;
 	}
 }
 
