@@ -15,22 +15,28 @@ PhysicsEngine::PhysicsEngine():
 	static PxDefaultErrorCallback gDefaultErrorCallback;
 	static PxDefaultAllocator gDefaultAllocatorCallback;
 	
-	printf("Creating Tolerances Scale\n");
 	tolScale = PxTolerancesScale();
-	printf("Creating Foundation\n");
 	foundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
-	printf("Creating Physics\n");
+	if (!foundation)
+	{
+		printf("Error: PxCreateFoundation Failed\n");
+		return;
+	}
+
+	cooking = PxCreateCooking(PX_PHYSICS_VERSION, *foundation, PxCookingParams(tolScale));
+	if (!cooking)
+	{
+		printf("Error: PxCreateCooking Failed\n");
+		return;
+	}
+
 	physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, tolScale);
-	printf("PhysX Initialized\n");
+	if (!physics)
+	{
+		printf("Error: PxCreatePhysics Failed\n");
+		return;
+	}
 
-	mtls[Wood] = physics->createMaterial(WOOD_STATIC_FRICTION, WOOD_DYNAMIC_FRICTION, WOOD_RESTITUTION);
-	mtls[HollowPVC] = physics->createMaterial(HOLLOWPVC_STATIC_FRICTION, HOLLOWPVC_DYNAMIC_FRICTION, HOLLOWPVC_RESTITUTION);
-	mtls[SolidPVC] = physics->createMaterial(SOLIDPVC_STATIC_FRICTION, SOLIDPVC_DYNAMIC_FRICTION, SOLIDPVC_RESTITUTION);
-	mtls[HollowSteel] = physics->createMaterial(HOLLOWSTEEL_STATIC_FRICTION, HOLLOWSTEEL_DYNAMIC_FRICTION, HOLLOWSTEEL_RESTITUTION);
-	mtls[SolidSteel] = physics->createMaterial(SOLIDSTEEL_STATIC_FRICTION, SOLIDSTEEL_DYNAMIC_FRICTION, SOLIDSTEEL_RESTITUTION);
-	mtls[Concrete] = physics->createMaterial(CONCRETE_STATIC_FRICTION, CONCRETE_DYNAMIC_FRICTION, CONCRETE_RESTITUTION);
-
-	simulationPeriod = 6.0f / float(engineFrequency);
 	PxSceneDesc sceneDesc = PxSceneDesc(tolScale);
 
 	if (!sceneDesc.cpuDispatcher)
@@ -45,6 +51,20 @@ PhysicsEngine::PhysicsEngine():
 	}
 
 	scene = physics->createScene(sceneDesc);
+	if (!scene)
+	{
+		printf("Error: createScene Failed\n");
+		return;
+	}
+
+	mtls[Wood] = physics->createMaterial(WOOD_STATIC_FRICTION, WOOD_DYNAMIC_FRICTION, WOOD_RESTITUTION);
+	mtls[HollowPVC] = physics->createMaterial(HOLLOWPVC_STATIC_FRICTION, HOLLOWPVC_DYNAMIC_FRICTION, HOLLOWPVC_RESTITUTION);
+	mtls[SolidPVC] = physics->createMaterial(SOLIDPVC_STATIC_FRICTION, SOLIDPVC_DYNAMIC_FRICTION, SOLIDPVC_RESTITUTION);
+	mtls[HollowSteel] = physics->createMaterial(HOLLOWSTEEL_STATIC_FRICTION, HOLLOWSTEEL_DYNAMIC_FRICTION, HOLLOWSTEEL_RESTITUTION);
+	mtls[SolidSteel] = physics->createMaterial(SOLIDSTEEL_STATIC_FRICTION, SOLIDSTEEL_DYNAMIC_FRICTION, SOLIDSTEEL_RESTITUTION);
+	mtls[Concrete] = physics->createMaterial(CONCRETE_STATIC_FRICTION, CONCRETE_DYNAMIC_FRICTION, CONCRETE_RESTITUTION);
+
+	simulationPeriod = 6.0f / float(engineFrequency);
 
 	updateThread = new thread(updateLoop, this);
 }
@@ -94,7 +114,7 @@ void PhysicsEngine::getActors(vector<PxRigidActor*> &actors)
 	}
 }
 
-PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, real radius, real Mass, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
+PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, quaternion orientation, real radius, real Mass, vec3 massSpaceInertiaTensor, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
 {
 	// Lock the thread while we add a collision sphere to the simulation
 	unique_lock<mutex> lock(engineMutex);
@@ -115,9 +135,10 @@ PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, real radius, real
 		}
 		if (isDynamic)
 		{
-			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position));
+			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
 			newActor->createShape(geometry, *mtls[mat]);
 			newActor->setMass(Mass);
+			newActor->setMassSpaceInertiaTensor(massSpaceInertiaTensor);
 			newActor->setLinearVelocity(initialLinearVelocity, true);
 			newActor->setAngularVelocity(initialAngularVelocity, true);
 			scene->addActor(*newActor);
@@ -125,7 +146,7 @@ PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, real radius, real
 		}
 		else
 		{
-			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position));
+			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
 			newActor->createShape(geometry, *mtls[mat]);
 			scene->addActor(*newActor);
 			return newActor;
@@ -134,7 +155,7 @@ PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, real radius, real
 	return nullptr;
 }
 
-PxRigidActor* PhysicsEngine::addCollisionCapsule(vec3 position, quaternion orientation, real halfHeight, real radius, real Mass, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
+PxRigidActor* PhysicsEngine::addCollisionCapsule(vec3 position, quaternion orientation, real halfHeight, real radius, real Mass, vec3 massSpaceInertiaTensor, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
 {
 	unique_lock<mutex> lock(engineMutex);
 	if (scene != nullptr)
@@ -157,6 +178,58 @@ PxRigidActor* PhysicsEngine::addCollisionCapsule(vec3 position, quaternion orien
 			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
 			newActor->createShape(geometry, *mtls[mat]);
 			newActor->setMass(Mass);
+			newActor->setMassSpaceInertiaTensor(massSpaceInertiaTensor);
+			newActor->setLinearVelocity(initialLinearVelocity, true);
+			newActor->setAngularVelocity(initialAngularVelocity, true);
+			scene->addActor(*newActor);
+			return newActor;
+		}
+		else
+		{
+			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
+			newActor->createShape(geometry, *mtls[mat]);
+			scene->addActor(*newActor);
+			return newActor;
+		}
+	}
+	return nullptr;
+}
+
+PxRigidActor* PhysicsEngine::addCollisionMesh(vec3 position, quaternion orientation, vec3 *vertices, uint32_t numVertices, real mass, vec3 massSpaceInertiaTensor, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
+{
+	unique_lock<mutex> lock(engineMutex);
+	if (scene != nullptr)
+	{
+		switch (mat)
+		{
+		case Wood:
+		case HollowPVC:
+		case SolidPVC:
+		case HollowSteel:
+		case SolidSteel:
+		case Concrete:
+			break;
+		default:
+			return nullptr;
+		}
+		PxConvexMeshDesc meshDesc;
+		meshDesc.flags			= PxConvexFlag::eCOMPUTE_CONVEX;
+		meshDesc.vertexLimit	= 256;
+		meshDesc.points.count	= numVertices;
+		meshDesc.points.data	= vertices;
+		meshDesc.points.stride	= sizeof(PxVec3);
+		PxDefaultMemoryOutputStream buf;
+		cooking->cookConvexMesh(meshDesc, buf);
+		PxConvexMesh *mesh = physics->createConvexMesh(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
+		PxConvexMeshGeometry geometry;
+		geometry.convexMesh = mesh;
+
+		if (isDynamic)
+		{
+			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
+			newActor->createShape(geometry, *mtls[mat]);
+			newActor->setMass(mass);
+			newActor->setMassSpaceInertiaTensor(massSpaceInertiaTensor);
 			newActor->setLinearVelocity(initialLinearVelocity, true);
 			newActor->setAngularVelocity(initialAngularVelocity, true);
 			scene->addActor(*newActor);
@@ -180,6 +253,21 @@ void PhysicsEngine::setGravity(vec3 gravity)
 	{
 		scene->setGravity(gravity);
 	}
+}
+
+vec3 PhysicsEngine::InertiaTensorSolidSphere(PxReal radius, PxReal mass)
+{
+	return vec3((mass*radius*radius)*0.4f);
+}
+
+vec3 PhysicsEngine::InertiaTensorHollowSphere(PxReal radius, PxReal mass)
+{
+	return vec3((mass*radius*radius)*(0.2f/0.3f));
+}
+
+vec3 PhysicsEngine::InertiaTensorSolidCube(PxReal width, PxReal mass)
+{
+	return vec3((mass*width*width)/6.0f);
 }
 
 PhysicsEngine::~PhysicsEngine()
