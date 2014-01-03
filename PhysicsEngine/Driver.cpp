@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 	// The hard part is getting the inertial tensors right
 	vec3 cubeVerts[] = { vec3(-1, -1, -1), vec3(1, -1, -1), vec3(-1, 1, -1), vec3(1, 1, -1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(-1, 1, 1), vec3(1, 1, 1) };
 	actors.push_back(engine.addCollisionMesh(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), cubeVerts, 8, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, 2.0f, 2.0f), PhysicsEngine::Wood));
-	actors.push_back(engine.addCollisionCapsule(vec3(0.0f, 0.0f, -10.0f), quaternion(0, 0, 1, 0), 1.0f, 1.0f, 1.0f, vec3(1.0f, 1.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC));
+	actors.push_back(engine.addCollisionCapsule(vec3(0.0f, 0.0f, -10.0f), quaternion(0, 0, 1, 0), 1.0f, 1.0f, 1.0f, PhysicsEngine::InertiaTensorSolidCapsule(1.0f, 1.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidSteel));
 	actors.push_back(engine.addCollisionSphere(vec3(-5.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), 1.0f, 1.0f, PhysicsEngine::InertiaTensorSolidSphere(1.0f, 1.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC));
 	actors.push_back(engine.addCollisionSphere(vec3(5.0f, 0.5f, -10.0f), quaternion(0, 0, 0, 1), 1.0f, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC));
 	

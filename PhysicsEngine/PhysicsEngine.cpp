@@ -270,6 +270,12 @@ vec3 PhysicsEngine::InertiaTensorSolidCube(PxReal width, PxReal mass)
 	return vec3((mass*width*width)/6.0f);
 }
 
+vec3 PhysicsEngine::InertiaTensorSolidCapsule(PxReal radius, PxReal halfHeight, PxReal mass)
+{
+	// TODO: Replace with correct values
+	return vec3(1.0f);
+}
+
 PhysicsEngine::~PhysicsEngine()
 {
 	if (updateThread != nullptr)
@@ -286,6 +292,12 @@ PhysicsEngine::~PhysicsEngine()
 	{
 		printf("Releasing Physics\n");
 		physics->release();
+	}
+
+	if (cooking != nullptr)
+	{
+		printf("Releasing PhysX Cooking\n");
+		cooking->release();
 	}
 
 	if (foundation != nullptr)
