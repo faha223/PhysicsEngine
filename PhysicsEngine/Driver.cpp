@@ -11,8 +11,7 @@
 #include <map>
 
 #include "PhysicsEngine.h"
-
-#define radToDeg($1) ($1*57.295779513082320876798154814105f)
+#include "PxGL.h"
 
 using namespace physx;
 using namespace std;
@@ -120,11 +119,7 @@ int main(int argc, char *argv[])
 			{
 				PxTransform transform = actors[i]->getGlobalPose();
 				glPushMatrix();
-				glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-				vec3 axis;
-				float angle;
-				transform.q.toRadiansAndUnitAxis(angle, axis);
-				glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
+				glTransformPx(transform);
 				uint32_t numShapes = actors[i]->getNbShapes();
 				if (numShapes != 0)
 				{
@@ -163,11 +158,7 @@ int main(int argc, char *argv[])
 		uint32_t numShapes = paddle->getNbShapes();
 		PxShape **shapes = new PxShape*[numShapes];
 		glPushMatrix();
-		glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-		vec3 axis;
-		float angle;
-		transform.q.toRadiansAndUnitAxis(angle, axis);
-		glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
+		glTransformPx(transform);
 		paddle->getShapes(shapes, numShapes, 0);
 		for (uint32_t i = 0; i < numShapes; i++)
 		{			
@@ -176,6 +167,7 @@ int main(int argc, char *argv[])
 			PxTransform localTransform = shapes[i]->getLocalPose();
 			drawCapsule(capsule, localTransform);
 		}
+		delete[] shapes;
 		glPopMatrix();
 		transform.q *= PxQuat(0.015f, vec3(0.0f, 0.0f, 1.0f));
 		paddle->setGlobalPose(transform, true);
@@ -216,11 +208,7 @@ void drawSphere(PxSphereGeometry sphere, PxTransform transform)
 
 	glPushMatrix();
 	
-	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis;
-	float angle;
-	transform.q.toRadiansAndUnitAxis(angle, axis);
-	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
+	glTransformPx(transform);
 
 	gluQuadricTexture(w, true);
 		
@@ -238,24 +226,18 @@ void drawCapsule(PxCapsuleGeometry cap, PxTransform transform)
 
 	glPushMatrix();
 
-	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis;
-	float angle;
-	transform.q.toRadiansAndUnitAxis(angle, axis);
-	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
+	glTransformPx(transform);
 	
 	gluQuadricTexture(w, true);
 
 	// Draw a standard capsule
-	glPushMatrix();
 	glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
 	glTranslatef(0.0f, 0.0f, cap.halfHeight);
 	gluSphere(w, cap.radius, 32, 32);
 	glTranslatef(0.0f, 0.0f, -2.0f*cap.halfHeight);
 	gluSphere(w, cap.radius, 32, 32);
 	gluCylinder(w, cap.radius, cap.radius, 2.0f*cap.halfHeight, 32, 1);
-	glPopMatrix();
-
+	
 	glPopMatrix();
 
 	gluDeleteQuadric(w);
@@ -266,11 +248,7 @@ void drawMesh(PxConvexMeshGeometry mesh, PxTransform transform)
 {
 	glPushMatrix();
 
-	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis;
-	float angle;
-	transform.q.toRadiansAndUnitAxis(angle, axis);
-	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
+	glTransformPx(transform);
 
 	// Draw the mesh here
 	PxU32 nbVerts = mesh.convexMesh->getNbVertices();
@@ -315,11 +293,7 @@ void drawMesh(PxTriangleMeshGeometry mesh, PxTransform transform)
 {
 	glPushMatrix();
 
-	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis;
-	float angle;
-	transform.q.toRadiansAndUnitAxis(angle, axis);
-	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
+	glTransformPx(transform);
 
 	glBegin(GL_TRIANGLES);
 	const vec3* vertices = mesh.triangleMesh->getVertices();

@@ -27,6 +27,9 @@
     <ClInclude Include="MaterialProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PxGL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Driver.cpp">

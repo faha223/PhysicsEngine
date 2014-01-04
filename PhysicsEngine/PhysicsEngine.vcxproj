@@ -81,6 +81,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="PxGL.h" />
     <ClInclude Include="MaterialProperties.h" />
     <ClInclude Include="PhysicsEngine.h" />
     <ClInclude Include="types.h" />
