@@ -37,16 +37,24 @@ int main(int argc, char *argv[])
 
 	PhysicsEngine engine;
 	
-	// The hard part is getting the inertial tensors right
+	PxGeometry *geom = nullptr;
 	vec3 cubeVerts[] = { vec3(-1, -1, -1), vec3(1, -1, -1), vec3(-1, 1, -1), vec3(1, 1, -1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(-1, 1, 1), vec3(1, 1, 1) };
 	vec3 floorVerts[] = { vec3(-10, -5, -20), vec3(10, -5, -20), vec3(-10, -6, -20), vec3(10, -6, -20), vec3(-10, -5, 0), vec3(10, -5, 0), vec3(-10, -6, 0), vec3(10, -6, 0) };
-	actors.push_back(engine.addRigidDynamic(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), &engine.createConvexMeshGeometry(cubeVerts, 8), 1, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, 2.0f, 2.0f), PhysicsEngine::Wood, 0.15f, 0.15f));
-	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), &engine.createCapsuleGeometry(1.0f, 2.5f), 1, 5.0f, PhysicsEngine::InertiaTensorSolidCapsule(1.0f, 2.5f, 5.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidSteel, 0.15f, 0.15f));
-	actors.push_back(engine.addRigidDynamic(vec3(-7.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), &engine.createSphereGeometry(1.0f), 1, 1.0f, PhysicsEngine::InertiaTensorSolidSphere(1.0f, 1.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC, 0.15f, 0.15f));
-	actors.push_back(engine.addRigidDynamic(vec3(7.0f, 0.5f, -10.0f), quaternion(0, 0, 0, 1), &engine.createSphereGeometry(1.0f), 1, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC, 0.15f, 0.15f));
-	actors.push_back(engine.addRigidStatic(vec3(0.0f, 0.0f, 0.0f), quaternion::createIdentity(), &engine.createConvexMeshGeometry(floorVerts, 8), 1, PhysicsEngine::SolidSteel));
+	geom = &engine.createConvexMeshGeometry(cubeVerts, 8);
+	actors.push_back(engine.addRigidDynamic(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, 2.0f, 2.0f), PhysicsEngine::Wood, 0.15f, 0.15f));
+	geom = &engine.createCapsuleGeometry(1.0f, 2.5f);
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 5.0f, -10.0f), quaternion(0, 0, 1, 0), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 5.0f, PhysicsEngine::InertiaTensorSolidCapsule(1.0f, 2.5f, 5.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidSteel, 0.15f, 0.15f));
+	geom = &engine.createSphereGeometry(1.0f);
+	actors.push_back(engine.addRigidDynamic(vec3(-7.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 1.0f, PhysicsEngine::InertiaTensorSolidSphere(1.0f, 1.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC, 0.15f, 0.15f));
+	geom = &engine.createSphereGeometry(1.0f);
+	actors.push_back(engine.addRigidDynamic(vec3(7.0f, 0.5f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC, 0.15f, 0.15f));
+	geom = &engine.createConvexMeshGeometry(floorVerts, 8);
+	actors.push_back(engine.addRigidStatic(vec3(0.0f, 0.0f, 0.0f), quaternion::createIdentity(), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, PhysicsEngine::SolidSteel));
 
-	PxRigidDynamic *paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), &engine.createCapsuleGeometry(1.0f, 2.5f), 1, FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood);
+	PxGeometry *paddleGeometry[] = { &engine.createCapsuleGeometry(1.0f, 2.5f), &engine.createCapsuleGeometry(1.0f, 1.0f) };
+	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(5.0f, 0.0f, 0.0f) };
+	quaternion paddleGeometryAngularOffsets[] = { quaternion(0, 0, 0, 1), quaternion(0, 1, 0, 0) };
+	PxRigidDynamic *paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), paddleGeometry, paddleGeometryLinearOffsets, paddleGeometryAngularOffsets, 2, FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood);
 
 	engine.setGravity(vec3(0.0f, -9.81f, 0.0f));
 
@@ -109,6 +117,12 @@ int main(int argc, char *argv[])
 			if (actors[i] != nullptr)
 			{
 				PxTransform transform = actors[i]->getGlobalPose();
+				glPushMatrix();
+				glTranslatef(transform.p.x, transform.p.y, transform.p.z);
+				vec3 axis;
+				float angle;
+				transform.q.toRadiansAndUnitAxis(angle, axis);
+				glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
 				uint32_t numShapes = actors[i]->getNbShapes();
 				if (numShapes != 0)
 				{
@@ -116,45 +130,56 @@ int main(int argc, char *argv[])
 					actors[i]->getShapes(shapes, numShapes, 0);
 					for (uint32_t j = 0; j < numShapes; j++)
 					{
+						PxTransform localTransform = shapes[j]->getLocalPose();
 						PxSphereGeometry sphere;
 						PxCapsuleGeometry capsule;
 						PxConvexMeshGeometry c_mesh;
 						PxTriangleMeshGeometry t_mesh;
 						if (shapes[j]->getSphereGeometry(sphere))
 						{
-							drawSphere(sphere, transform);
+							drawSphere(sphere, localTransform);
 						}
 						else if (shapes[j]->getCapsuleGeometry(capsule))
 						{
-							drawCapsule(capsule, transform);
+							drawCapsule(capsule, localTransform);
 						}
 						else if (shapes[j]->getConvexMeshGeometry(c_mesh))
 						{
-							drawMesh(c_mesh, transform);
+							drawMesh(c_mesh, localTransform);
 						}
 						else if (shapes[j]->getTriangleMeshGeometry(t_mesh))
 						{
-							drawMesh(t_mesh, transform);
+							drawMesh(t_mesh, localTransform);
 						}
 					}
 					delete [] shapes;
 				}
+				glPopMatrix();
 			}
 		}
 		PxTransform transform = paddle->getGlobalPose();
 		uint32_t numShapes = paddle->getNbShapes();
 		PxShape **shapes = new PxShape*[numShapes];
+		glPushMatrix();
+		glTranslatef(transform.p.x, transform.p.y, transform.p.z);
+		vec3 axis;
+		float angle;
+		transform.q.toRadiansAndUnitAxis(angle, axis);
+		glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
 		paddle->getShapes(shapes, numShapes, 0);
 		for (uint32_t i = 0; i < numShapes; i++)
 		{			
 			PxCapsuleGeometry capsule;
 			shapes[i]->getCapsuleGeometry(capsule);
-			drawCapsule(capsule, transform);
+			PxTransform localTransform = shapes[i]->getLocalPose();
+			drawCapsule(capsule, localTransform);
 		}
-		PxReal angle = 0.15f;
-		paddle->setGlobalPose(PxTransform(transform.p, quaternion(0, 0, cos(angle / 2), sin(angle / 2))*transform.q), true);
+		glPopMatrix();
+		transform.q *= PxQuat(0.015f, vec3(0.0f, 0.0f, 1.0f));
+		paddle->setGlobalPose(transform, true);
 		SDL_GL_SwapWindow(window);
 		checkGLErrors();
+		std::this_thread::sleep_for(std::chrono::milliseconds(16));
 	}
 
 	SDL_GL_DeleteContext(context);
@@ -190,8 +215,10 @@ void drawSphere(PxSphereGeometry sphere, PxTransform transform)
 	glPushMatrix();
 	
 	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis = transform.q.getImaginaryPart();
-	glRotatef(radToDeg(transform.q.getAngle()), axis.x, axis.y, axis.z);
+	vec3 axis;
+	float angle;
+	transform.q.toRadiansAndUnitAxis(angle, axis);
+	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
 
 	gluQuadricTexture(w, true);
 		
@@ -210,9 +237,11 @@ void drawCapsule(PxCapsuleGeometry cap, PxTransform transform)
 	glPushMatrix();
 
 	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis = transform.q.getImaginaryPart();
-	glRotatef(radToDeg(transform.q.getAngle()), axis.x, axis.y, axis.z);
-
+	vec3 axis;
+	float angle;
+	transform.q.toRadiansAndUnitAxis(angle, axis);
+	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
+	
 	gluQuadricTexture(w, true);
 
 	// Draw a standard capsule
@@ -236,8 +265,10 @@ void drawMesh(PxConvexMeshGeometry mesh, PxTransform transform)
 	glPushMatrix();
 
 	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis = transform.q.getImaginaryPart();
-	glRotatef(radToDeg(transform.q.getAngle()), axis.x, axis.y, axis.z);
+	vec3 axis;
+	float angle;
+	transform.q.toRadiansAndUnitAxis(angle, axis);
+	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
 
 	// Draw the mesh here
 	PxU32 nbVerts = mesh.convexMesh->getNbVertices();
@@ -262,11 +293,12 @@ void drawMesh(PxConvexMeshGeometry mesh, PxTransform transform)
 		glBegin(GL_TRIANGLES);
 		for (PxU32 j = 2; j<face.mNbVerts; j++)
 		{
-			glTexCoord2f(0.0f, 0.0f);
+			
+			glTexCoord2f(0.0f, 1.0f); 
 			glVertex3f(vertices[offset].x, vertices[offset].y, vertices[offset].z);
 			glTexCoord2f(1.0f, 0.0f);
 			glVertex3f(vertices[offset+j].x, vertices[offset+j].y, vertices[offset+j].z);
-			glTexCoord2f(0.0f, 1.0f);
+			glTexCoord2f(0.0f, 0.0f);
 			glVertex3f(vertices[offset+j-1].x, vertices[offset+j-1].y, vertices[offset+j-1].z);
 		}
 		glEnd();
@@ -282,8 +314,10 @@ void drawMesh(PxTriangleMeshGeometry mesh, PxTransform transform)
 	glPushMatrix();
 
 	glTranslatef(transform.p.x, transform.p.y, transform.p.z);
-	vec3 axis = transform.q.getImaginaryPart();
-	glRotatef(radToDeg(transform.q.getAngle()), axis.x, axis.y, axis.z);
+	vec3 axis;
+	float angle;
+	transform.q.toRadiansAndUnitAxis(angle, axis);
+	glRotatef(radToDeg(angle), axis.x, axis.y, axis.z);
 
 	glBegin(GL_TRIANGLES);
 	const vec3* vertices = mesh.triangleMesh->getVertices();

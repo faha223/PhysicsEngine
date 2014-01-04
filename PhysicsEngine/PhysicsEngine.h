@@ -67,10 +67,10 @@ public:
 	physx::PxConvexMeshGeometry createConvexMeshGeometry(physx::PxConvexMesh &mesh);
 
 	// Adds a rigid dynamic actor to the scene, and returns a pointer reference to it
-	physx::PxRigidDynamic* addRigidDynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry *components, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f);
+	physx::PxRigidDynamic* addRigidDynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f);
 
 	// Adds a rigid static actor to the scene, and returns a pointer reference to it
-	physx::PxRigidStatic* addRigidStatic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry *components, physx::PxU32 numComponents, Material mat);
+	physx::PxRigidStatic* addRigidStatic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, Material mat);
 
 	// Sets the array of rigid actors to contain all of the actors in the scene
 	void getActors(std::vector<physx::PxRigidActor*> &actors);

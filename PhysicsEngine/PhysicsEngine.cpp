@@ -111,7 +111,7 @@ void PhysicsEngine::getActors(vector<PxRigidActor*> &actors)
 }
 
 #pragma region Add Actors
-PxRigidDynamic* PhysicsEngine::addRigidDynamic(PxVec3 position, PxQuat orientation, PxGeometry *components, PxU32 numComponents, PxReal Mass, PxVec3 MomentOfInertia, PxVec3 initialLinearVelocity, PxVec3 initialAngularVelocity, Material mat, PxReal linearDamping, PxReal angularDamping)
+PxRigidDynamic* PhysicsEngine::addRigidDynamic(PxVec3 position, PxQuat orientation, PxGeometry **components, PxVec3 *componentLinearOffsets, PxQuat *componentAngularOffsets, PxU32 numComponents, PxReal Mass, PxVec3 MomentOfInertia, PxVec3 initialLinearVelocity, PxVec3 initialAngularVelocity, Material mat, PxReal linearDamping, PxReal angularDamping)
 {
 	unique_lock<mutex> lock(engineMutex);
 	if ((physics == nullptr) || (scene == nullptr))
@@ -139,6 +139,7 @@ PxRigidDynamic* PhysicsEngine::addRigidDynamic(PxVec3 position, PxQuat orientati
 		newActor->setMass(1.0f);
 		newActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
 	}
+	newActor->setGlobalPose(PxTransform(position, orientation));
 	newActor->setMassSpaceInertiaTensor(MomentOfInertia);
 	newActor->setLinearVelocity(initialLinearVelocity);
 	newActor->setAngularVelocity(initialAngularVelocity);
@@ -146,13 +147,14 @@ PxRigidDynamic* PhysicsEngine::addRigidDynamic(PxVec3 position, PxQuat orientati
 	newActor->setAngularDamping(angularDamping);
 	for (PxU32 i = 0; i < numComponents; i++)
 	{
-		newActor->createShape(components[i], *mtls[mat]);
+		PxShape* shape = newActor->createShape(*components[i], *mtls[mat]);
+		shape->setLocalPose(PxTransform(componentLinearOffsets[i], componentAngularOffsets[i]));
 	}
 	scene->addActor(*newActor);
 	return newActor;
 }
 
-PxRigidStatic* PhysicsEngine::addRigidStatic(PxVec3 position, PxQuat orientation, PxGeometry *components, PxU32 numComponents, Material mat)
+PxRigidStatic* PhysicsEngine::addRigidStatic(PxVec3 position, PxQuat orientation, PxGeometry **components, PxVec3 *componentLinearOffsets, PxQuat *componentAngularOffsets, PxU32 numComponents, Material mat)
 {
 	unique_lock<mutex> lock(engineMutex);
 	if ((physics == nullptr) || (scene == nullptr))
@@ -174,7 +176,8 @@ PxRigidStatic* PhysicsEngine::addRigidStatic(PxVec3 position, PxQuat orientation
 	PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
 	for (PxU32 i = 0; i < numComponents; i++)
 	{
-		newActor->createShape(components[i], *mtls[mat]);
+		PxShape *shape = newActor->createShape(*components[i], *mtls[mat]);
+		shape->setLocalPose(PxTransform(componentLinearOffsets[i], componentAngularOffsets[i]));
 	}
 	scene->addActor(*newActor);
 	return newActor;
