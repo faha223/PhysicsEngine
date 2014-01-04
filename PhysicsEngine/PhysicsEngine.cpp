@@ -9,12 +9,13 @@ PhysicsEngine::PhysicsEngine():
 	physics(nullptr),
 	foundation(nullptr),
 	scene(nullptr),
-	engineFrequency(360),
-	quit(false)
+	engineFrequency(360)
 {
 	static PxDefaultErrorCallback gDefaultErrorCallback;
 	static PxDefaultAllocator gDefaultAllocatorCallback;
 	
+	quit.store(0, std::memory_order_release);
+
 	tolScale = PxTolerancesScale();
 	foundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
 	if (!foundation)
@@ -73,16 +74,12 @@ void PhysicsEngine::updateLoop(PhysicsEngine *pe)
 {
 	if (pe == nullptr)
 		return;
-	unique_lock<mutex> lock(pe->engineMutex);
-	while (!pe->quit)
+	while (0 == pe->quit.load(std::memory_order_acquire))
 	{
-		lock.unlock();
 		chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 		pe->update();
 		chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
 		this_thread::sleep_for(chrono::milliseconds(long(1000 * pe->simulationPeriod)) - (end-start));
-
-		lock.lock();
 	}
 }
 
@@ -206,6 +203,14 @@ PxConvexMesh *PhysicsEngine::createConvexMesh(PxVec3 *pointCloud, PxU32 numVerti
 	return physics->createConvexMesh(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
 }
 
+PxConvexMeshGeometry PhysicsEngine::createConvexMeshGeometry(PxConvexMesh &mesh)
+{
+	unique_lock<mutex> lock(engineMutex);
+	PxConvexMeshGeometry geometry;
+		geometry.convexMesh = &mesh;
+	return geometry;
+}
+
 PxConvexMeshGeometry PhysicsEngine::createConvexMeshGeometry(PxVec3 *pointCloud, PxU32 numVertices)
 {
 	unique_lock<mutex> lock(engineMutex);
@@ -280,7 +285,7 @@ PhysicsEngine::~PhysicsEngine()
 	{
 		{
 			unique_lock<mutex> lock(engineMutex);
-			quit = true;
+			quit.store(1, std::memory_order_release);
 		}
 		updateThread->join();
 	}
@@ -297,7 +302,6 @@ PhysicsEngine::~PhysicsEngine()
 
 	if (foundation != nullptr)
 	{
-		printf("Releasing PhysX Foundation\n");
 		foundation->release();
 	}
 }
