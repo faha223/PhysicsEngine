@@ -113,13 +113,35 @@ void PhysicsEngine::getActors(vector<PxRigidActor*> &actors)
 	}
 }
 
+#pragma region Add Actors
 PxRigidDynamic* PhysicsEngine::addRigidDynamic(PxVec3 position, PxQuat orientation, PxGeometry *components, PxU32 numComponents, PxReal Mass, PxVec3 MomentOfInertia, PxVec3 initialLinearVelocity, PxVec3 initialAngularVelocity, Material mat, PxReal linearDamping, PxReal angularDamping)
 {
 	unique_lock<mutex> lock(engineMutex);
 	if ((physics == nullptr) || (scene == nullptr))
 		return nullptr;
+	
+	switch (mat)
+	{
+	case Wood:
+	case HollowPVC:
+	case SolidPVC:
+	case HollowSteel:
+	case SolidSteel:
+	case Concrete:
+		break;
+	default:
+		return nullptr;
+	}
+
 	PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
-	newActor->setMass(Mass);
+	// If the designer requested Infinite mass, set the mass to 1 and make the actor kinematic (animated, dynamic, behaves as though it has infinite mass)
+	if (Mass < FLT_MAX)
+		newActor->setMass(Mass);
+	else
+	{
+		newActor->setMass(1.0f);
+		newActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	}
 	newActor->setMassSpaceInertiaTensor(MomentOfInertia);
 	newActor->setLinearVelocity(initialLinearVelocity);
 	newActor->setAngularVelocity(initialAngularVelocity);
@@ -133,139 +155,35 @@ PxRigidDynamic* PhysicsEngine::addRigidDynamic(PxVec3 position, PxQuat orientati
 	return newActor;
 }
 
-/*
-PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, quaternion orientation, real radius, real Mass, vec3 massSpaceInertiaTensor, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
-{
-	// Lock the thread while we add a collision sphere to the simulation
-	unique_lock<mutex> lock(engineMutex);
-	if (scene != nullptr)
-	{
-		PxSphereGeometry geometry(radius);
-		switch (mat)
-		{
-		case Wood:
-		case HollowPVC:
-		case SolidPVC:
-		case HollowSteel:
-		case SolidSteel:
-		case Concrete:
-			break;
-		default:
-			return nullptr;
-		}
-		if (isDynamic)
-		{
-			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
-			newActor->createShape(geometry, *mtls[mat]);
-			newActor->setMass(Mass);
-			newActor->setMassSpaceInertiaTensor(massSpaceInertiaTensor);
-			newActor->setLinearVelocity(initialLinearVelocity, true);
-			newActor->setAngularVelocity(initialAngularVelocity, true);
-			scene->addActor(*newActor);
-			return newActor;
-		}
-		else
-		{
-			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
-			newActor->createShape(geometry, *mtls[mat]);
-			scene->addActor(*newActor);
-			return newActor;
-		}
-	}
-	return nullptr;
-}
-
-PxRigidActor* PhysicsEngine::addCollisionCapsule(vec3 position, quaternion orientation, real halfHeight, real radius, real Mass, vec3 massSpaceInertiaTensor, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
+PxRigidStatic* PhysicsEngine::addRigidStatic(PxVec3 position, PxQuat orientation, PxGeometry *components, PxU32 numComponents, Material mat)
 {
 	unique_lock<mutex> lock(engineMutex);
-	if (scene != nullptr)
+	if ((physics == nullptr) || (scene == nullptr))
+		return nullptr;
+	
+	switch (mat)
 	{
-		PxCapsuleGeometry geometry(radius, halfHeight);
-		switch (mat)
-		{
-		case Wood:
-		case HollowPVC:
-		case SolidPVC:
-		case HollowSteel:
-		case SolidSteel:
-		case Concrete:
-			break;
-		default:
-			return nullptr;
-		}
-		if (isDynamic)
-		{
-			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
-			newActor->createShape(geometry, *mtls[mat]);
-			newActor->setMass(Mass);
-			newActor->setMassSpaceInertiaTensor(massSpaceInertiaTensor);
-			newActor->setLinearVelocity(initialLinearVelocity, true);
-			newActor->setAngularVelocity(initialAngularVelocity, true);
-			scene->addActor(*newActor);
-			return newActor;
-		}
-		else
-		{
-			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
-			newActor->createShape(geometry, *mtls[mat]);
-			scene->addActor(*newActor);
-			return newActor;
-		}
+	case Wood:
+	case HollowPVC:
+	case SolidPVC:
+	case HollowSteel:
+	case SolidSteel:
+	case Concrete:
+		break;
+	default:
+		return nullptr;
 	}
-	return nullptr;
-}
 
-PxRigidActor* PhysicsEngine::addCollisionMesh(vec3 position, quaternion orientation, vec3 *vertices, uint32_t numVertices, real mass, vec3 massSpaceInertiaTensor, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
-{
-	unique_lock<mutex> lock(engineMutex);
-	if (scene != nullptr)
+	PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
+	for (PxU32 i = 0; i < numComponents; i++)
 	{
-		switch (mat)
-		{
-		case Wood:
-		case HollowPVC:
-		case SolidPVC:
-		case HollowSteel:
-		case SolidSteel:
-		case Concrete:
-			break;
-		default:
-			return nullptr;
-		}
-		PxConvexMeshDesc meshDesc;
-		meshDesc.flags			= PxConvexFlag::eCOMPUTE_CONVEX;
-		meshDesc.vertexLimit	= 256;
-		meshDesc.points.count	= numVertices;
-		meshDesc.points.data	= vertices;
-		meshDesc.points.stride	= sizeof(PxVec3);
-		PxDefaultMemoryOutputStream buf;
-		cooking->cookConvexMesh(meshDesc, buf);
-		PxConvexMesh *mesh = physics->createConvexMesh(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
-		PxConvexMeshGeometry geometry;
-		geometry.convexMesh = mesh;
-
-		if (isDynamic)
-		{
-			PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
-			newActor->createShape(geometry, *mtls[mat]);
-			newActor->setMass(mass);
-			newActor->setMassSpaceInertiaTensor(massSpaceInertiaTensor);
-			newActor->setLinearVelocity(initialLinearVelocity, true);
-			newActor->setAngularVelocity(initialAngularVelocity, true);
-			scene->addActor(*newActor);
-			return newActor;
-		}
-		else
-		{
-			PxRigidStatic *newActor = physics->createRigidStatic(PxTransform(position, orientation));
-			newActor->createShape(geometry, *mtls[mat]);
-			scene->addActor(*newActor);
-			return newActor;
-		}
+		newActor->createShape(components[i], *mtls[mat]);
 	}
-	return nullptr;
+	scene->addActor(*newActor);
+	return newActor;
 }
-//*/
+#pragma endregion
+
 PxSphereGeometry PhysicsEngine::createSphereGeometry(PxReal radius)
 {
 	unique_lock<mutex> lock(engineMutex);
@@ -315,6 +233,7 @@ void PhysicsEngine::setGravity(vec3 gravity)
 	}
 }
 
+#pragma region Common Inertia Tensors
 vec3 PhysicsEngine::InertiaTensorSolidSphere(PxReal radius, PxReal mass)
 {
 	return vec3((mass*radius*radius)*0.4f);
@@ -341,11 +260,18 @@ vec3 PhysicsEngine::InertiaTensorSolidCapsule(PxReal radius, PxReal halfHeight, 
 		bodymass*((0.25f*radius*radius) + (halfHeight*halfHeight / 3.0f)) + capmass*radius*(halfHeight + 0.375f + (0.259f*radius)),
 		bodymass*((0.25f*radius*radius) + (halfHeight*halfHeight / 3.0f)) + capmass*radius*(halfHeight + 0.375f + (0.259f*radius)));
 }
+#pragma endregion
 
 PxPhysics *PhysicsEngine::getPhysics()
 {
 	unique_lock<mutex> lock(engineMutex);
 	return physics;
+}
+
+PxCooking *PhysicsEngine::getCooking()
+{
+	unique_lock<mutex> lock(engineMutex);
+	return cooking;
 }
 
 PhysicsEngine::~PhysicsEngine()

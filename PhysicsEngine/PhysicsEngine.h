@@ -56,6 +56,8 @@ public:
 
 	physx::PxRigidDynamic* addRigidDynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry *components, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f);
 
+	physx::PxRigidStatic* addRigidStatic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry *components, physx::PxU32 numComponents, Material mat);
+
 	void getActors(std::vector<physx::PxRigidActor*> &actors);
 
 	void setGravity(vec3 gravity);
@@ -71,6 +73,8 @@ public:
 	static vec3 InertiaTensorSolidCapsule(physx::PxReal radius, physx::PxReal halfHeight, physx::PxReal mass);
 
 	physx::PxPhysics *PhysicsEngine::getPhysics();
+
+	physx::PxCooking *PhysicsEngine::getCooking();
 
 	~PhysicsEngine();
 };
