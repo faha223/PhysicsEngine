@@ -113,6 +113,27 @@ void PhysicsEngine::getActors(vector<PxRigidActor*> &actors)
 	}
 }
 
+PxRigidDynamic* PhysicsEngine::addRigidDynamic(PxVec3 position, PxQuat orientation, PxGeometry *components, PxU32 numComponents, PxReal Mass, PxVec3 MomentOfInertia, PxVec3 initialLinearVelocity, PxVec3 initialAngularVelocity, Material mat, PxReal linearDamping, PxReal angularDamping)
+{
+	unique_lock<mutex> lock(engineMutex);
+	if ((physics == nullptr) || (scene == nullptr))
+		return nullptr;
+	PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
+	newActor->setMass(Mass);
+	newActor->setMassSpaceInertiaTensor(MomentOfInertia);
+	newActor->setLinearVelocity(initialLinearVelocity);
+	newActor->setAngularVelocity(initialAngularVelocity);
+	newActor->setLinearDamping(linearDamping);
+	newActor->setAngularDamping(angularDamping);
+	for (PxU32 i = 0; i < numComponents; i++)
+	{
+		newActor->createShape(components[i], *mtls[mat]);
+	}
+	scene->addActor(*newActor);
+	return newActor;
+}
+
+/*
 PxRigidActor* PhysicsEngine::addCollisionSphere(vec3 position, quaternion orientation, real radius, real Mass, vec3 massSpaceInertiaTensor, vec3 initialLinearVelocity, vec3 initialAngularVelocity, Material mat, bool isDynamic)
 {
 	// Lock the thread while we add a collision sphere to the simulation
@@ -244,6 +265,46 @@ PxRigidActor* PhysicsEngine::addCollisionMesh(vec3 position, quaternion orientat
 	}
 	return nullptr;
 }
+//*/
+PxSphereGeometry PhysicsEngine::createSphereGeometry(PxReal radius)
+{
+	unique_lock<mutex> lock(engineMutex);
+	return PxSphereGeometry(radius);
+}
+
+PxConvexMesh *PhysicsEngine::createConvexMesh(PxVec3 *pointCloud, PxU32 numVertices)
+{
+	unique_lock<mutex> lock(engineMutex);
+	if ((physics == nullptr) || (cooking == nullptr))
+		return nullptr;
+	PxConvexMeshDesc meshDesc;
+	meshDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+	meshDesc.vertexLimit = 256;
+	meshDesc.points.count = numVertices;
+	meshDesc.points.data = pointCloud;
+	meshDesc.points.stride = sizeof(PxVec3);
+	PxDefaultMemoryOutputStream buf;
+	cooking->cookConvexMesh(meshDesc, buf);
+	return physics->createConvexMesh(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
+}
+
+PxConvexMeshGeometry PhysicsEngine::createConvexMeshGeometry(PxVec3 *pointCloud, PxU32 numVertices)
+{
+	unique_lock<mutex> lock(engineMutex);
+	PxConvexMeshGeometry geometry;
+	lock.unlock();
+	PxConvexMesh *mesh = createConvexMesh(pointCloud, numVertices);
+	lock.lock();
+	if (mesh)
+		geometry.convexMesh = mesh;
+	return geometry;
+}
+
+PxCapsuleGeometry PhysicsEngine::createCapsuleGeometry(PxReal radius, PxReal halfHeight)
+{
+	unique_lock<mutex> lock(engineMutex);
+	return PxCapsuleGeometry(radius, halfHeight);
+}
 
 void PhysicsEngine::setGravity(vec3 gravity)
 {
@@ -279,6 +340,12 @@ vec3 PhysicsEngine::InertiaTensorSolidCapsule(PxReal radius, PxReal halfHeight, 
 	return vec3(radius*radius*(0.4f*capmass + 0.5f*bodymass),
 		bodymass*((0.25f*radius*radius) + (halfHeight*halfHeight / 3.0f)) + capmass*radius*(halfHeight + 0.375f + (0.259f*radius)),
 		bodymass*((0.25f*radius*radius) + (halfHeight*halfHeight / 3.0f)) + capmass*radius*(halfHeight + 0.375f + (0.259f*radius)));
+}
+
+PxPhysics *PhysicsEngine::getPhysics()
+{
+	unique_lock<mutex> lock(engineMutex);
+	return physics;
 }
 
 PhysicsEngine::~PhysicsEngine()

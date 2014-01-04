@@ -46,12 +46,15 @@ public:
 	};
 	PhysicsEngine();
 
-	physx::PxRigidActor* addCollisionSphere(vec3 position, quaternion orientation, real radius, real Mass = 1.0f, vec3 massSpaceInertiaTensor = vec3(1.0f, 1.0f, 1.0f), vec3 initialLinearVelocity = vec3(0.0f, 0.0f, 0.0f), vec3 initialAngularVelocity = vec3(0.0f, 0.0f, 0.0f), Material mat = Wood, bool isDynamic = true);		// Adds a collision Sphere to the scene, and returns a pointer to it so that the user can access its data
-	
-	physx::PxRigidActor* addCollisionCapsule(vec3 position, quaternion orientation, real halfHeight = 1.0f, real radius = 1.0f, real Mass = 1.0f, vec3 massSpaceInertiaTensor = vec3(1.0f, 1.0f, 1.0f), vec3 initialLinearVelocity = vec3(0.0f, 0.0f, 0.0f), vec3 initialAngularVelocity = vec3(0.0f, 0.0f, 0.0f), Material mat = Wood, bool isDynamic = true);
-	
-	// Make sure all vertices are relative to the center of mass or else there will be odd behavior
-	physx::PxRigidActor* addCollisionMesh(vec3 position, quaternion orientation, vec3 *vertices, uint32_t numVertices, real mass = 1.0f, vec3 massSpaceInertiaTensor = vec3(1.0f, 1.0f, 1.0f), vec3 initialLinearVelocity = vec3(0.0f, 0.0f, 0.0f), vec3 initialAngularVelocity = vec3(0.0f, 0.0f, 0.0f), Material mat = Wood, bool isDynamic = true);
+	physx::PxSphereGeometry createSphereGeometry(physx::PxReal radius);
+
+	physx::PxCapsuleGeometry createCapsuleGeometry(physx::PxReal radius, physx::PxReal halfHeight);
+
+	physx::PxConvexMesh *createConvexMesh(physx::PxVec3 *pointCloud, physx::PxU32 numVertices);
+
+	physx::PxConvexMeshGeometry createConvexMeshGeometry(physx::PxVec3 *pointCloud, physx::PxU32 numVertices);
+
+	physx::PxRigidDynamic* addRigidDynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry *components, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f);
 
 	void getActors(std::vector<physx::PxRigidActor*> &actors);
 
@@ -66,6 +69,8 @@ public:
 	static vec3 InertiaTensorHollowSphere(physx::PxReal radius, physx::PxReal mass);
 
 	static vec3 InertiaTensorSolidCapsule(physx::PxReal radius, physx::PxReal halfHeight, physx::PxReal mass);
+
+	physx::PxPhysics *PhysicsEngine::getPhysics();
 
 	~PhysicsEngine();
 };

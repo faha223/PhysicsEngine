@@ -39,10 +39,10 @@ int main(int argc, char *argv[])
 	
 	// The hard part is getting the inertial tensors right
 	vec3 cubeVerts[] = { vec3(-1, -1, -1), vec3(1, -1, -1), vec3(-1, 1, -1), vec3(1, 1, -1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(-1, 1, 1), vec3(1, 1, 1) };
-	actors.push_back(engine.addCollisionMesh(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), cubeVerts, 8, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, 2.0f, 2.0f), PhysicsEngine::Wood));
-	actors.push_back(engine.addCollisionCapsule(vec3(0.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), 5.0f, 1.0f, 5.0f, PhysicsEngine::InertiaTensorSolidCapsule(1.0f, 5.0f, 5.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidSteel));
-	actors.push_back(engine.addCollisionSphere(vec3(-5.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), 1.0f, 1.0f, PhysicsEngine::InertiaTensorSolidSphere(1.0f, 1.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC));
-	actors.push_back(engine.addCollisionSphere(vec3(5.0f, 0.5f, -10.0f), quaternion(0, 0, 0, 1), 1.0f, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC));
+	actors.push_back(engine.addRigidDynamic(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), &engine.createConvexMeshGeometry(cubeVerts, 8), 1, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, 2.0f, 2.0f), PhysicsEngine::Wood));
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), &engine.createCapsuleGeometry(1.0f, 2.5f), 1, 5.0f, PhysicsEngine::InertiaTensorSolidCapsule(1.0f, 2.5f, 5.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidSteel));
+	actors.push_back(engine.addRigidDynamic(vec3(-7.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), &engine.createSphereGeometry(1.0f), 1, 1.0f, PhysicsEngine::InertiaTensorSolidSphere(1.0f, 1.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC));
+	actors.push_back(engine.addRigidDynamic(vec3(7.0f, 0.5f, -10.0f), quaternion(0, 0, 0, 1), &engine.createSphereGeometry(1.0f), 1, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC));
 	
 	//engine.setGravity(vec3(0.0f, -9.81f, 0.0f));
 
