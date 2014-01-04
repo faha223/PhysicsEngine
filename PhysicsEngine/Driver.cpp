@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
 
 	PhysicsEngine engine;
 	
+	// Build the scene
 	PxGeometry *geom = nullptr;
 	vec3 cubeVerts[] = { vec3(-1, -1, -1), vec3(1, -1, -1), vec3(-1, 1, -1), vec3(1, 1, -1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(-1, 1, 1), vec3(1, 1, 1) };
 	vec3 floorVerts[] = { vec3(-10, -5, -20), vec3(10, -5, -20), vec3(-10, -6, -20), vec3(10, -6, -20), vec3(-10, -5, 0), vec3(10, -5, 0), vec3(-10, -6, 0), vec3(10, -6, 0) };
@@ -52,10 +53,11 @@ int main(int argc, char *argv[])
 	actors.push_back(engine.addRigidStatic(vec3(0.0f, 0.0f, 0.0f), quaternion::createIdentity(), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, PhysicsEngine::SolidSteel));
 
 	PxGeometry *paddleGeometry[] = { &engine.createCapsuleGeometry(1.0f, 2.5f), &engine.createCapsuleGeometry(1.0f, 1.0f) };
-	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(5.0f, 0.0f, 0.0f) };
+	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(6.0f, 0.0f, -1.0f) };
 	quaternion paddleGeometryAngularOffsets[] = { quaternion(0, 0, 0, 1), quaternion(0, 1, 0, 0) };
-	PxRigidDynamic *paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), paddleGeometry, paddleGeometryLinearOffsets, paddleGeometryAngularOffsets, 2, FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood);
+	PxRigidDynamic *paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), paddleGeometry, paddleGeometryLinearOffsets, paddleGeometryAngularOffsets, sizeof(paddleGeometry)/sizeof(PxGeometry*), FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood);
 
+	// Set gravity for the scene
 	engine.setGravity(vec3(0.0f, -9.81f, 0.0f));
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -69,7 +71,7 @@ int main(int argc, char *argv[])
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);			// 24 bit depth buffer
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);		// Enable Double Buffering
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);	// Enable Multisampling
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);	// 4x MSAA
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);	// 4x MSAA
 
 	window = SDL_CreateWindow("Physics Engine Driver", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);// | SDL_WINDOW_FULLSCREEN);
 	if (window == nullptr)
