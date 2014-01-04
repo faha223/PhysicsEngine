@@ -91,7 +91,6 @@ void PhysicsEngine::update()
 	unique_lock<mutex> lock(engineMutex);
 	if (scene != nullptr)
 	{
-		printf("Updating Scene\n");
 		scene->simulate(simulationPeriod);
 		scene->fetchResults(true);
 	}
@@ -273,14 +272,19 @@ vec3 PhysicsEngine::InertiaTensorSolidCube(PxReal width, PxReal mass)
 vec3 PhysicsEngine::InertiaTensorSolidCapsule(PxReal radius, PxReal halfHeight, PxReal mass)
 {
 	// TODO: Replace with correct values
-	return vec3(1.0f);
+	
+	PxReal capmass = mass*(((4.0f / 3.0f)*radius) / (2.0f*halfHeight + (4.0f / 3.0f)*radius));
+	PxReal bodymass = mass*((2.0f*halfHeight) / (2.0f*halfHeight + (4.0f / 3.0f)*radius));
+
+	return vec3(radius*radius*(0.4f*capmass + 0.5f*bodymass),
+		bodymass*((0.25f*radius*radius) + (halfHeight*halfHeight / 3.0f)) + capmass*radius*(halfHeight + 0.375f + (0.259f*radius)),
+		bodymass*((0.25f*radius*radius) + (halfHeight*halfHeight / 3.0f)) + capmass*radius*(halfHeight + 0.375f + (0.259f*radius)));
 }
 
 PhysicsEngine::~PhysicsEngine()
 {
 	if (updateThread != nullptr)
 	{
-		printf("Shutting Down Update Thread\n");
 		{
 			unique_lock<mutex> lock(engineMutex);
 			quit = true;
@@ -290,13 +294,11 @@ PhysicsEngine::~PhysicsEngine()
 
 	if (physics != nullptr)
 	{
-		printf("Releasing Physics\n");
 		physics->release();
 	}
 
 	if (cooking != nullptr)
 	{
-		printf("Releasing PhysX Cooking\n");
 		cooking->release();
 	}
 
