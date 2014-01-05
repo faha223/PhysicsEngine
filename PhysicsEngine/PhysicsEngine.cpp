@@ -202,7 +202,8 @@ PxConvexMesh *PhysicsEngine::createConvexMesh(PxVec3 *pointCloud, PxU32 numVerti
 	meshDesc.points.data = pointCloud;
 	meshDesc.points.stride = sizeof(PxVec3);
 	PxDefaultMemoryOutputStream buf;
-	cooking->cookConvexMesh(meshDesc, buf);
+	if (!cooking->cookConvexMesh(meshDesc, buf))
+		return nullptr;
 	return physics->createConvexMesh(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
 }
 
@@ -230,6 +231,50 @@ PxCapsuleGeometry PhysicsEngine::createCapsuleGeometry(PxReal radius, PxReal hal
 {
 	unique_lock<mutex> lock(engineMutex);
 	return PxCapsuleGeometry(radius, halfHeight);
+}
+
+PxHeightField *PhysicsEngine::createHeightField(uint8_t *field, uint32_t width, uint32_t height, float scale, float bias)
+{
+	unique_lock<mutex> lock(engineMutex);
+	if ((physics == nullptr) || (cooking == nullptr))
+		return nullptr;
+	return nullptr;
+	PxHeightFieldDesc heightfieldDesc;
+	// TODO: Fill the heightfield with the proper values
+	PxDefaultMemoryOutputStream buf;
+	cooking->cookHeightField(heightfieldDesc, buf);
+	return physics->createHeightField(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
+}
+
+PxHeightFieldGeometry PhysicsEngine::createHeightFieldGeometry(PxHeightField *heightField)
+{
+	unique_lock<mutex> lock(engineMutex);
+	PxHeightFieldGeometry geom;
+	geom.heightField = heightField;
+	return geom;
+}
+
+PxTriangleMesh *PhysicsEngine::createTriangleMesh(PxVec3 *vertices, PxU32 numVertices, PxU32 *indices, PxU32 numIndices)
+{
+	PxTriangleMeshDesc meshDesc;
+	meshDesc.points.count = numIndices;
+	meshDesc.points.data = vertices;
+	meshDesc.points.stride = sizeof(PxVec3);
+	meshDesc.triangles.count = numIndices / 3;
+	meshDesc.triangles.data = indices;
+	meshDesc.triangles.stride = 3 * sizeof(PxU32);
+	PxDefaultMemoryOutputStream buf;
+	if (!cooking->cookTriangleMesh(meshDesc, buf))
+		return nullptr;
+	return physics->createTriangleMesh(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
+}
+
+PxTriangleMeshGeometry PhysicsEngine::createTriangleMeshGeometry(PxTriangleMesh* mesh)
+{
+	unique_lock<mutex> lock(engineMutex);
+	PxTriangleMeshGeometry geometry;
+	geometry.triangleMesh = mesh;
+	return geometry;
 }
 
 void PhysicsEngine::setGravity(vec3 gravity)

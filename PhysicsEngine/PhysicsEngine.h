@@ -66,6 +66,18 @@ public:
 	// Returns a ConvexMeshGeometry object (uses the ConvexMesh passed)
 	physx::PxConvexMeshGeometry createConvexMeshGeometry(physx::PxConvexMesh &mesh);
 
+	// Returns a height field
+	physx::PxHeightField *createHeightField(uint8_t *field, uint32_t width, uint32_t height, float scale, float bias);
+
+	// Returns a heightfield geometry
+	physx::PxHeightFieldGeometry createHeightFieldGeometry(physx::PxHeightField *heightField);
+
+	// Returns a triangle mesh
+	physx::PxTriangleMesh *createTriangleMesh(physx::PxVec3 *vertices, physx::PxU32 numVertices, physx::PxU32 *indices, physx::PxU32 numIndices);
+
+	// Returns a triangle mesh geometry (good for use as level geometry)
+	physx::PxTriangleMeshGeometry createTriangleMeshGeometry(physx::PxTriangleMesh* mesh);
+
 	// Adds a rigid dynamic actor to the scene, and returns a pointer reference to it
 	physx::PxRigidDynamic* addRigidDynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f);
 

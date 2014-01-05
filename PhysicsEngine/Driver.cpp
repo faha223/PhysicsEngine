@@ -33,6 +33,9 @@ int main(int argc, char *argv[])
 	SDL_GLContext context;
 	bool quit = false;
 	map<int, bool> Keyboard;
+	float cameraYaw = 0.0f;
+	float cameraPitch = 0.0f;
+	bool mouseLeft = false, mouseRight = false;
 
 	PhysicsEngine engine;
 	
@@ -47,14 +50,16 @@ int main(int argc, char *argv[])
 	geom = &engine.createSphereGeometry(1.0f);
 	actors.push_back(engine.addRigidDynamic(vec3(-7.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 1.0f, PhysicsEngine::InertiaTensorSolidSphere(1.0f, 1.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC, 0.15f, 0.15f));
 	geom = &engine.createSphereGeometry(1.0f);
-	actors.push_back(engine.addRigidDynamic(vec3(7.0f, 0.5f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC, 0.15f, 0.15f));
+	actors.push_back(engine.addRigidDynamic(vec3(7.0f, 0.5f, -12.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC, 0.15f, 0.15f));
 	geom = &engine.createConvexMeshGeometry(floorVerts, 8);
 	actors.push_back(engine.addRigidStatic(vec3(0.0f, 0.0f, 0.0f), quaternion::createIdentity(), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, PhysicsEngine::SolidSteel));
 
-	PxGeometry *paddleGeometry[] = { &engine.createCapsuleGeometry(1.0f, 2.5f), &engine.createCapsuleGeometry(1.0f, 1.0f) };
-	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(6.0f, 0.0f, -1.0f) };
+	PxGeometry *paddleGeometry[] = { &engine.createCapsuleGeometry(1.0f, 2.5f), &engine.createCapsuleGeometry(1.0f, 2.0f) };
+	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(6.0f, 0.0f, -2.0f) };
 	quaternion paddleGeometryAngularOffsets[] = { quaternion(0, 0, 0, 1), quaternion(0, 1, 0, 0) };
-	PxRigidDynamic *paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), paddleGeometry, paddleGeometryLinearOffsets, paddleGeometryAngularOffsets, sizeof(paddleGeometry)/sizeof(PxGeometry*), FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood);
+	PxRigidDynamic *paddle = nullptr;
+	
+	//actors.push_back((paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), paddleGeometry, paddleGeometryLinearOffsets, paddleGeometryAngularOffsets, sizeof(paddleGeometry) / sizeof(PxGeometry*), FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood)));
 
 	// Set gravity for the scene
 	engine.setGravity(vec3(0.0f, -9.81f, 0.0f));
@@ -107,12 +112,36 @@ int main(int argc, char *argv[])
 			case SDL_KEYUP:
 				Keyboard[e.key.keysym.sym] = false;
 				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if (e.button.button == SDL_BUTTON_LEFT)
+					mouseLeft = true;
+				else if (e.button.button == SDL_BUTTON_RIGHT)
+					mouseRight = true;
+				break;
+			case SDL_MOUSEBUTTONUP:
+				if (e.button.button == SDL_BUTTON_LEFT)
+					mouseLeft = false;
+				else if (e.button.button == SDL_BUTTON_RIGHT)
+					mouseRight = false;
+				break;
+			case SDL_MOUSEMOTION:
+				if (mouseLeft)
+				{
+					cameraYaw += e.motion.xrel;
+					cameraPitch += e.motion.yrel;
+				}
+				break;
 			}
 			if (Keyboard[SDLK_ESCAPE])
 				quit = true;
 		}
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		Display();
+		glLoadIdentity();
+		glTranslatef(0.0f, 0.0f, -10.0f);
+		glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
+		glRotatef(cameraYaw, 0.0f, 1.0f, 0.0f);
+		// Draw all actors
 		for (size_t i = 0; i < actors.size(); i++)
 		{
 			if (actors[i] != nullptr)
@@ -125,28 +154,27 @@ int main(int argc, char *argv[])
 				{
 					PxShape** shapes = new PxShape*[numShapes];
 					actors[i]->getShapes(shapes, numShapes, 0);
-					for (uint32_t j = 0; j < numShapes; j++)
+					for (PxU32 j = 0; j < numShapes; j++)
 					{
-						PxTransform localTransform = shapes[j]->getLocalPose();
 						PxSphereGeometry sphere;
 						PxCapsuleGeometry capsule;
 						PxConvexMeshGeometry c_mesh;
 						PxTriangleMeshGeometry t_mesh;
 						if (shapes[j]->getSphereGeometry(sphere))
 						{
-							drawSphere(sphere, localTransform);
+							drawSphere(sphere, shapes[j]->getLocalPose());
 						}
 						else if (shapes[j]->getCapsuleGeometry(capsule))
 						{
-							drawCapsule(capsule, localTransform);
+							drawCapsule(capsule, shapes[j]->getLocalPose());
 						}
 						else if (shapes[j]->getConvexMeshGeometry(c_mesh))
 						{
-							drawMesh(c_mesh, localTransform);
+							drawMesh(c_mesh, shapes[j]->getLocalPose());
 						}
 						else if (shapes[j]->getTriangleMeshGeometry(t_mesh))
 						{
-							drawMesh(t_mesh, localTransform);
+							drawMesh(t_mesh, shapes[j]->getLocalPose());
 						}
 					}
 					delete [] shapes;
@@ -154,23 +182,14 @@ int main(int argc, char *argv[])
 				glPopMatrix();
 			}
 		}
-		PxTransform transform = paddle->getGlobalPose();
-		uint32_t numShapes = paddle->getNbShapes();
-		PxShape **shapes = new PxShape*[numShapes];
-		glPushMatrix();
-		glTransformPx(transform);
-		paddle->getShapes(shapes, numShapes, 0);
-		for (uint32_t i = 0; i < numShapes; i++)
-		{			
-			PxCapsuleGeometry capsule;
-			shapes[i]->getCapsuleGeometry(capsule);
-			PxTransform localTransform = shapes[i]->getLocalPose();
-			drawCapsule(capsule, localTransform);
+
+		// Rotate the paddle
+		if (paddle != nullptr)
+		{
+			PxTransform transform = paddle->getGlobalPose();
+			transform.q *= PxQuat(0.015f, vec3(0.0f, 0.0f, 1.0f));
+			paddle->setGlobalPose(transform, true);
 		}
-		delete[] shapes;
-		glPopMatrix();
-		transform.q *= PxQuat(0.015f, vec3(0.0f, 0.0f, 1.0f));
-		paddle->setGlobalPose(transform, true);
 		SDL_GL_SwapWindow(window);
 		checkGLErrors();
 		std::this_thread::sleep_for(std::chrono::milliseconds(16));

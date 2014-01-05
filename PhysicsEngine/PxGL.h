@@ -4,6 +4,7 @@
 #include <glew/glew.h>
 #include "types.h"
 #define radToDeg($1) ($1*57.295779513082320876798154814105f)
+#define degToRad($1) ($1/57.295779513082320876798154814105f)
 
 void glTransformPx(physx::PxTransform transform)
 {
