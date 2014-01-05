@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	vec3 cubeVerts[] = { vec3(-1, -1, -1), vec3(1, -1, -1), vec3(-1, 1, -1), vec3(1, 1, -1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(-1, 1, 1), vec3(1, 1, 1) };
 	vec3 floorVerts[] = { vec3(-10, -5, -20), vec3(10, -5, -20), vec3(-10, -6, -20), vec3(10, -6, -20), vec3(-10, -5, 0), vec3(10, -5, 0), vec3(-10, -6, 0), vec3(10, -6, 0) };
 	geom = &engine.createConvexMeshGeometry(cubeVerts, 8);
-	actors.push_back(engine.addRigidDynamic(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, 2.0f, 2.0f), PhysicsEngine::Wood, 0.15f, 0.15f));
+	actors.push_back(engine.addRigidDynamic(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, -2.0f, -2.0f), PhysicsEngine::Wood, 0.25f, 0.25f));
 	geom = &engine.createCapsuleGeometry(1.0f, 2.5f);
 	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 5.0f, -10.0f), quaternion(0, 0, 1, 0), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 5.0f, PhysicsEngine::InertiaTensorSolidCapsule(1.0f, 2.5f, 5.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidSteel, 0.15f, 0.15f));
 	geom = &engine.createSphereGeometry(1.0f);
@@ -55,11 +55,11 @@ int main(int argc, char *argv[])
 	actors.push_back(engine.addRigidStatic(vec3(0.0f, 0.0f, 0.0f), quaternion::createIdentity(), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, PhysicsEngine::SolidSteel));
 
 	PxGeometry *paddleGeometry[] = { &engine.createCapsuleGeometry(1.0f, 2.5f), &engine.createCapsuleGeometry(1.0f, 2.0f) };
-	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(6.0f, 0.0f, -2.0f) };
-	quaternion paddleGeometryAngularOffsets[] = { quaternion(0, 0, 0, 1), quaternion(0, 1, 0, 0) };
+	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(5.0f, 0.0f, -2.0f) };
+	quaternion paddleGeometryAngularOffsets[] = { quaternion::createIdentity(), quaternion(PI/2.0f, vec3(0,1,0)) };
 	PxRigidDynamic *paddle = nullptr;
 	
-	//actors.push_back((paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), paddleGeometry, paddleGeometryLinearOffsets, paddleGeometryAngularOffsets, sizeof(paddleGeometry) / sizeof(PxGeometry*), FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood)));
+	actors.push_back((paddle = engine.addRigidDynamic(vec3(0.0f, 0.0f, -10.0f), quaternion::createIdentity(), paddleGeometry, paddleGeometryLinearOffsets, paddleGeometryAngularOffsets, sizeof(paddleGeometry) / sizeof(PxGeometry*), FLT_MAX, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::Wood)));
 
 	// Set gravity for the scene
 	engine.setGravity(vec3(0.0f, -9.81f, 0.0f));

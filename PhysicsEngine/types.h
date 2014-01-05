@@ -10,6 +10,6 @@ typedef physx::PxReal real;
 typedef physx::PxVec3 vec3;
 typedef physx::PxQuat quaternion;
 
-#define _PHYSICS_EPSILON 0.000001;
+#define PI 3.1415926535897932384626433832795
 
 #endif

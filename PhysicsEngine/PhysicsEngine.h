@@ -49,6 +49,8 @@ public:
 	{
 		Wood, SolidPVC, HollowPVC, SolidSteel, HollowSteel, Concrete
 	};
+
+	// Constructor
 	PhysicsEngine();
 
 	// Returns a SphereGeometry object
