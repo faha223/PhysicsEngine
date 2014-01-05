@@ -233,16 +233,22 @@ PxCapsuleGeometry PhysicsEngine::createCapsuleGeometry(PxReal radius, PxReal hal
 	return PxCapsuleGeometry(radius, halfHeight);
 }
 
-PxHeightField *PhysicsEngine::createHeightField(uint8_t *field, uint32_t width, uint32_t height, float scale, float bias)
+PxHeightField *PhysicsEngine::createHeightField(PxHeightFieldSample *field, uint32_t nbRows, uint32_t nbCols, PxReal convexEdgeThreshold, PxReal thickness)
 {
 	unique_lock<mutex> lock(engineMutex);
 	if ((physics == nullptr) || (cooking == nullptr))
 		return nullptr;
-	return nullptr;
 	PxHeightFieldDesc heightfieldDesc;
-	// TODO: Fill the heightfield with the proper values
+	heightfieldDesc.format = PxHeightFieldFormat::eS16_TM;
+	heightfieldDesc.nbColumns = nbCols;
+	heightfieldDesc.nbRows = nbRows;
+	heightfieldDesc.samples.data = field;
+	heightfieldDesc.samples.stride = sizeof(PxHeightFieldSample);
+	heightfieldDesc.convexEdgeThreshold = convexEdgeThreshold;
+	heightfieldDesc.thickness = thickness;
 	PxDefaultMemoryOutputStream buf;
-	cooking->cookHeightField(heightfieldDesc, buf);
+	if (!cooking->cookHeightField(heightfieldDesc, buf))
+		return nullptr;
 	return physics->createHeightField(PxDefaultMemoryInputData(buf.getData(), buf.getSize()));
 }
 

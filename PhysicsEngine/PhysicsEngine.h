@@ -67,7 +67,7 @@ public:
 	physx::PxConvexMeshGeometry createConvexMeshGeometry(physx::PxConvexMesh &mesh);
 
 	// Returns a height field
-	physx::PxHeightField *createHeightField(uint8_t *field, uint32_t width, uint32_t height, float scale, float bias);
+	physx::PxHeightField *createHeightField(physx::PxHeightFieldSample *field, uint32_t nbRows, uint32_t nbCols, physx::PxReal convexEdgeThreshold = 0.0f, physx::PxReal thickness = -1.0f);
 
 	// Returns a heightfield geometry
 	physx::PxHeightFieldGeometry createHeightFieldGeometry(physx::PxHeightField *heightField);
