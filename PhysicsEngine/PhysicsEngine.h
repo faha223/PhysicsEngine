@@ -24,6 +24,14 @@ private:
 	std::mutex engineMutex;
 	std::thread *updateThread;
 
+	struct PxRigidAerodynamic
+	{
+		physx::PxRigidDynamic *actor;
+		physx::PxReal LiftCoefficient;
+		physx::PxReal DragCoefficient;
+		void ApplyLiftAndDrag();
+	};
+
 	// PhysX classes necessary for interacting with the engine
 	physx::PxPhysics* physics;
 	physx::PxCooking *cooking;
@@ -39,6 +47,9 @@ private:
 
 	// Tells the simulation loop to quit
 	std::atomic_int32_t quit;									// DEFAULT: false
+
+	// A list to keep track of all aerodynamic actors
+	std::vector<PxRigidAerodynamic> aeroActors;
 
 	static void updateLoop(PhysicsEngine *pe);	// The static function that calls the update method at regular intervals
 	void update();
@@ -82,6 +93,9 @@ public:
 
 	// Adds a rigid dynamic actor to the scene, and returns a pointer reference to it
 	physx::PxRigidDynamic* addRigidDynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f);
+
+	// Adds a rigid dynamic actor to the scene and applies aerodynamics to it at each update
+	physx::PxRigidDynamic *addRigidAerodynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f, physx::PxReal lift = 0.0f, physx::PxReal drag = 0.0f);
 
 	// Adds a rigid static actor to the scene, and returns a pointer reference to it
 	physx::PxRigidStatic* addRigidStatic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, Material mat);

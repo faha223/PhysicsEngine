@@ -88,8 +88,18 @@ void PhysicsEngine::update()
 	unique_lock<mutex> lock(engineMutex);
 	if (scene != nullptr)
 	{
+		for (uint32_t i = 0; i < aeroActors.size(); i++)
+			aeroActors[i].ApplyLiftAndDrag();
 		scene->simulate(simulationPeriod);
 		scene->fetchResults(true);
+		//*
+		uint32_t count = scene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC);
+		PxActor **aa = new PxActor*[count];
+		scene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC, aa, count);
+		for (uint32_t i = 0; i < count; i++)
+		{
+			((PxRigidDynamic*)aa[i])->wakeUp();
+		}//*/
 	}
 }
 
@@ -98,7 +108,7 @@ void PhysicsEngine::getActors(vector<PxRigidActor*> &actors)
 	unique_lock<mutex> lock(engineMutex);
 	if (scene != nullptr)
 	{
-		uint32_t count = scene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
+uint32_t count = scene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
 		PxActor **aa = new PxActor*[count];
 		scene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, aa, count);
 		actors.clear();
@@ -180,6 +190,54 @@ PxRigidStatic* PhysicsEngine::addRigidStatic(PxVec3 position, PxQuat orientation
 		shape->setLocalPose(PxTransform(componentLinearOffsets[i], componentAngularOffsets[i]));
 	}
 	scene->addActor(*newActor);
+	return newActor;
+}
+
+PxRigidDynamic *PhysicsEngine::addRigidAerodynamic(PxVec3 position, PxQuat orientation, PxGeometry **components, PxVec3 *componentLinearOffsets, PxQuat *componentAngularOffsets, PxU32 numComponents, PxReal Mass, PxVec3 MomentOfInertia, PxVec3 initialLinearVelocity, PxVec3 initialAngularVelocity, Material mat, PxReal linearDamping, PxReal angularDamping, PxReal lift, PxReal drag)
+{
+	unique_lock<mutex> lock(engineMutex);
+	if ((physics == nullptr) || (scene == nullptr))
+		return nullptr;
+
+	switch (mat)
+	{
+	case Wood:
+	case HollowPVC:
+	case SolidPVC:
+	case HollowSteel:
+	case SolidSteel:
+	case Concrete:
+		break;
+	default:
+		return nullptr;
+	}
+
+	PxRigidDynamic *newActor = physics->createRigidDynamic(PxTransform(position, orientation));
+	// If the designer requested Infinite mass, set the mass to 1 and make the actor kinematic (animated, dynamic, behaves as though it has infinite mass)
+	if (Mass < FLT_MAX)
+		newActor->setMass(Mass);
+	else
+	{
+		newActor->setMass(1.0f);
+		newActor->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+	}
+	newActor->setGlobalPose(PxTransform(position, orientation));
+	newActor->setMassSpaceInertiaTensor(MomentOfInertia);
+	newActor->setLinearVelocity(initialLinearVelocity);
+	newActor->setAngularVelocity(initialAngularVelocity);
+	newActor->setLinearDamping(linearDamping);
+	newActor->setAngularDamping(angularDamping);
+	for (PxU32 i = 0; i < numComponents; i++)
+	{
+		PxShape* shape = newActor->createShape(*components[i], *mtls[mat]);
+		shape->setLocalPose(PxTransform(componentLinearOffsets[i], componentAngularOffsets[i]));
+	}
+	PxRigidAerodynamic aero;
+	aero.actor = newActor;
+	aero.DragCoefficient = drag;
+	aero.LiftCoefficient = lift;
+	scene->addActor(*newActor);
+	aeroActors.push_back(aero);
 	return newActor;
 }
 #pragma endregion
@@ -358,4 +416,18 @@ PhysicsEngine::~PhysicsEngine()
 	{
 		foundation->release();
 	}
+}
+
+void PhysicsEngine::PxRigidAerodynamic::ApplyLiftAndDrag()
+{
+	if (!actor)
+		return;
+	// TODO: Correct calculation of lift and drag (and drag-from-lift) forces
+	PxVec3 velocity = actor->getLinearVelocity();
+	PxVec3 up = actor->getGlobalPose().q.getNormalized().rotate(PxVec3(0, 1, 0));
+	PxReal lift = 0.5f*LiftCoefficient * velocity.cross(up).magnitude();
+	PxReal drag = DragCoefficient * velocity.dot(up);
+	//actor->addForce(velocity.getNormalized()*(-lift*0.25f));
+	actor->addForce(velocity.getNormalized()*(-drag));
+	actor->addForce(up*lift);
 }
