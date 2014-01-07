@@ -108,11 +108,11 @@ void PhysicsEngine::getActors(vector<PxRigidActor*> &actors)
 	unique_lock<mutex> lock(engineMutex);
 	if (scene != nullptr)
 	{
-uint32_t count = scene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
+		PxU32 count = scene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
 		PxActor **aa = new PxActor*[count];
 		scene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, aa, count);
 		actors.clear();
-		for (uint32_t i = 0; i < count; i++)
+		for (PxU32 i = 0; i < count; i++)
 		{
 			actors.push_back(aa[i]->isRigidActor());
 		}
@@ -193,7 +193,7 @@ PxRigidStatic* PhysicsEngine::addRigidStatic(PxVec3 position, PxQuat orientation
 	return newActor;
 }
 
-PxRigidDynamic *PhysicsEngine::addRigidAerodynamic(PxVec3 position, PxQuat orientation, PxGeometry **components, PxVec3 *componentLinearOffsets, PxQuat *componentAngularOffsets, PxU32 numComponents, PxReal Mass, PxVec3 MomentOfInertia, PxVec3 initialLinearVelocity, PxVec3 initialAngularVelocity, Material mat, PxReal linearDamping, PxReal angularDamping, PxReal lift, PxReal drag)
+PxRigidDynamic *PhysicsEngine::addRigidAerodynamic(PxVec3 position, PxQuat orientation, PxGeometry **components, PxVec3 *componentLinearOffsets, PxQuat *componentAngularOffsets, PxU32 numComponents, PxReal Mass, PxVec3 MomentOfInertia, PxVec3 initialLinearVelocity, PxVec3 initialAngularVelocity, Material mat, PxReal linearDamping, PxReal angularDamping, PxReal lift, PxReal drag, PxReal planformArea)
 {
 	unique_lock<mutex> lock(engineMutex);
 	if ((physics == nullptr) || (scene == nullptr))
@@ -236,12 +236,14 @@ PxRigidDynamic *PhysicsEngine::addRigidAerodynamic(PxVec3 position, PxQuat orien
 	aero.actor = newActor;
 	aero.DragCoefficient = drag;
 	aero.LiftCoefficient = lift;
+	aero.SurfaceArea = planformArea;
 	scene->addActor(*newActor);
 	aeroActors.push_back(aero);
 	return newActor;
 }
 #pragma endregion
 
+#pragma region PhysX Geometries
 PxSphereGeometry PhysicsEngine::createSphereGeometry(PxReal radius)
 {
 	unique_lock<mutex> lock(engineMutex);
@@ -340,6 +342,7 @@ PxTriangleMeshGeometry PhysicsEngine::createTriangleMeshGeometry(PxTriangleMesh*
 	geometry.triangleMesh = mesh;
 	return geometry;
 }
+#pragma endregion
 
 void PhysicsEngine::setGravity(vec3 gravity)
 {
@@ -423,11 +426,5 @@ void PhysicsEngine::PxRigidAerodynamic::ApplyLiftAndDrag()
 	if (!actor)
 		return;
 	// TODO: Correct calculation of lift and drag (and drag-from-lift) forces
-	PxVec3 velocity = actor->getLinearVelocity();
-	PxVec3 up = actor->getGlobalPose().q.getNormalized().rotate(PxVec3(0, 1, 0));
-	PxReal lift = 0.5f*LiftCoefficient * velocity.cross(up).magnitude();
-	PxReal drag = DragCoefficient * velocity.dot(up);
-	//actor->addForce(velocity.getNormalized()*(-lift*0.25f));
-	actor->addForce(velocity.getNormalized()*(-drag));
-	actor->addForce(up*lift);
+
 }

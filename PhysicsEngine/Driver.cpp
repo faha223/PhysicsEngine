@@ -11,6 +11,7 @@
 #include <map>
 
 #include "PhysicsEngine.h"
+#include "RenderEngine.h"
 #include "PxGL.h"
 
 using namespace physx;
@@ -38,11 +39,48 @@ int main(int argc, char *argv[])
 	bool mouseLeft = false, mouseRight = false;
 
 	PhysicsEngine engine;
+	//RenderEngine renderer(1280, 720, 16, false);
 	
 	// Build the scene
+	//*
 	PxGeometry *geom = nullptr;
 	vec3 cubeVerts[] = { vec3(-1, -1, -1), vec3(1, -1, -1), vec3(-1, 1, -1), vec3(1, 1, -1), vec3(-1, -1, 1), vec3(1, -1, 1), vec3(-1, 1, 1), vec3(1, 1, 1) };
-	vec3 floorVerts[] = { vec3(-10, -5, -20), vec3(10, -5, -20), vec3(-10, -6, -20), vec3(10, -6, -20), vec3(-10, -5, 0), vec3(10, -5, 0), vec3(-10, -6, 0), vec3(10, -6, 0) };
+	
+	vec3 floorVerts[] = { vec3(-10, -5, -20), vec3(10, -5, -20), vec3(-10, -6, -20), vec3(10, -6, -20), vec3(-10, -5, 0), vec3(10, -5, 0), vec3(-10, -6, 0), vec3(10, -6, 0),
+		vec3(-5, -6.5, -5), vec3(-5, -6.5, -15), vec3(5, -6.5, -5), vec3(5, -6.5, -15) };
+	
+	PxU32 floorIndices[] = {9, 0, 4, 9, 4, 8, 8, 4, 10, 10, 4, 5, 10, 5, 1, 1, 11, 10, 1, 9, 0, 9, 11, 1, 10, 9, 8, 9, 10, 11, 5, 4, 6, 5, 6, 7, 1, 0, 2, 2, 3, 1, 1, 5, 7, 7, 3, 1, 4, 0, 2, 2, 6, 4};
+	
+	PxGeometry **link = new PxGeometry*[5];
+	link[0] = &engine.createCapsuleGeometry(0.25f, 1.0f);
+	link[1] = &engine.createCapsuleGeometry(0.25f, 2.0f);
+	link[2] = &engine.createCapsuleGeometry(0.25f, 1.0f);
+	link[3] = &engine.createCapsuleGeometry(0.25f, 2.0f);
+	link[4] = &engine.createConvexMeshGeometry(cubeVerts, 8);
+
+	vec3 *linkpartOffset = new vec3[5];
+	linkpartOffset[0] = vec3(0, 2, 0);
+	linkpartOffset[1] = vec3(-1, 0, 0);
+	linkpartOffset[2] = vec3(0, -2, 0); 
+	linkpartOffset[3] = vec3(1, 0, 0);
+	linkpartOffset[4] = vec3(0, 2, 0);
+
+	quaternion *linkpartOrientation = new quaternion[5];
+	linkpartOrientation[0] = quaternion(0, vec3(0, 0, 1));
+	linkpartOrientation[1] = quaternion(PI/2, vec3(0, 0, 1));
+	linkpartOrientation[2] = quaternion(0, vec3(0, 0, 1));
+	linkpartOrientation[3] = quaternion(PI/2, vec3(0, 0, 1));
+	linkpartOrientation[4] = quaternion(0, vec3(0, 1, 0));
+	
+	actors.push_back(engine.addRigidStatic(vec3(0.0f, 29.25f, -10.0f), quaternion(0, vec3(0, 1, 0)), link, linkpartOffset, linkpartOrientation, 5, PhysicsEngine::SolidSteel));
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 27.5f, -10.0f), quaternion(PI / 2, vec3(0, 1, 0)), link, linkpartOffset, linkpartOrientation, 4, 1.0f, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::SolidSteel, 0.015f, 0.015f));
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 24.0f, -10.0f), quaternion::createIdentity(), link, linkpartOffset, linkpartOrientation, 4, 1.0f, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::SolidSteel, 0.015f, 0.015f));
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 20.5f, -10.0f), quaternion(PI / 2, vec3(0, 1, 0)), link, linkpartOffset, linkpartOrientation, 4, 1.0f, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::SolidSteel, 0.015f, 0.015f));
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 17.0f, -10.0f), quaternion::createIdentity(), link, linkpartOffset, linkpartOrientation, 4, 1.0f, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::SolidSteel, 0.015f, 0.015f));
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 13.5f, -10.0f), quaternion(PI / 2, vec3(0, 1, 0)), link, linkpartOffset, linkpartOrientation, 4, 1.0f, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::SolidSteel, 0.015f, 0.015f));
+	actors.push_back(engine.addRigidDynamic(vec3(0.0f, 10.0f, -10.0f), quaternion::createIdentity(), link, linkpartOffset, linkpartOrientation, 4, 1.0f, vec3(1.0f), vec3(0.0f), vec3(0.0f), PhysicsEngine::SolidSteel, 0.015f, 0.015f));
+	
+
 	geom = &engine.createConvexMeshGeometry(cubeVerts, 8);
 	actors.push_back(engine.addRigidDynamic(vec3(10.0f, 5.0f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 10.0f, PhysicsEngine::InertiaTensorSolidCube(2.0f, 10.0f), vec3(-4.0f, -1.0f, 0.0f), vec3(0.0f, -2.0f, -2.0f), PhysicsEngine::Wood, 0.25f, 0.25f));
 	geom = &engine.createCapsuleGeometry(1.0f, 2.5f);
@@ -51,9 +89,9 @@ int main(int argc, char *argv[])
 	actors.push_back(engine.addRigidDynamic(vec3(-7.0f, 0.0f, -10.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 1.0f, PhysicsEngine::InertiaTensorSolidSphere(1.0f, 1.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), PhysicsEngine::SolidPVC, 0.15f, 0.15f));
 	geom = &engine.createSphereGeometry(1.0f);
 	actors.push_back(engine.addRigidDynamic(vec3(7.0f, 0.5f, -12.0f), quaternion(0, 0, 0, 1), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, 1.0f, PhysicsEngine::InertiaTensorHollowSphere(1.0f, 1.0f), vec3(-2.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -2.0f), PhysicsEngine::HollowPVC, 0.15f, 0.15f));
-	geom = &engine.createConvexMeshGeometry(floorVerts, 8);
+	geom = &engine.createTriangleMeshGeometry(engine.createTriangleMesh(floorVerts, sizeof(floorVerts)/sizeof(vec3), floorIndices, sizeof(floorIndices)/sizeof(PxU32)));
 	actors.push_back(engine.addRigidStatic(vec3(0.0f, 0.0f, 0.0f), quaternion::createIdentity(), &geom, &vec3(0.0f, 0.0f, 0.0f), &quaternion::createIdentity(), 1, PhysicsEngine::SolidSteel));
-
+	//*/
 	PxGeometry *paddleGeometry[] = { &engine.createCapsuleGeometry(1.0f, 2.5f), &engine.createCapsuleGeometry(1.0f, 2.0f) };
 	vec3	   paddleGeometryLinearOffsets[] = { vec3(2.5f, 0.0f, 0.0f), vec3(5.0f, 0.0f, -2.0f) };
 	quaternion paddleGeometryAngularOffsets[] = { quaternion::createIdentity(), quaternion(PI/2.0f, vec3(0,1,0)) };
@@ -93,11 +131,13 @@ int main(int argc, char *argv[])
 		SDL_GL_SetSwapInterval(1);
 	}
 	glewInit();
+	
 	LoadTexture();
 	InitGL();
 
 	while (!quit)
 	{
+		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 		SDL_Event e;
 		while (SDL_PollEvent(&e))
 		{
@@ -140,13 +180,13 @@ int main(int argc, char *argv[])
 			Keyboard[SDLK_SPACE] = false;
 			PxGeometry** geom = new PxGeometry*[1];
 			geom[0] = &engine.createSphereGeometry(0.5f);
-			actors.push_back(engine.addRigidAerodynamic(vec3(-10.0f, 5.0f, -10.0f), quaternion::createIdentity(), geom, &vec3(0, 0, 0), &quaternion::createIdentity(), 1, 0.25f, PhysicsEngine::InertiaTensorHollowSphere(0.5f, 0.25f), vec3(10.0f, 0.0f, 0.0f), vec3(0.0f, 10.0f, 0.0f), PhysicsEngine::Wood, 0, 0, 0.5f, 0.25f));
+			actors.push_back(engine.addRigidAerodynamic(vec3(-10.0f, 5.0f, -10.0f), quaternion::createIdentity(), geom, &vec3(0, 0, 0), &quaternion::createIdentity(), 1, 0.25f, PhysicsEngine::InertiaTensorHollowSphere(0.5f, 0.25f), vec3(10.0f, 20.0f, 0.0f), vec3(0.0f, 10.0f, 0.0f), PhysicsEngine::Wood, 0, 0, 0.5f, 0.0f, PI*0.25f));
 			delete [] geom;
 		}
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		Display();
 		glLoadIdentity();
-		glTranslatef(0.0f, 0.0f, -10.0f);
+		glTranslatef(0.0f, 0.0f, -20.0f);
 		glRotatef(cameraPitch, 1.0f, 0.0f, 0.0f);
 		glRotatef(cameraYaw, 0.0f, 1.0f, 0.0f);
 		// Draw all actors
@@ -200,7 +240,8 @@ int main(int argc, char *argv[])
 		}
 		SDL_GL_SwapWindow(window);
 		checkGLErrors();
-		std::this_thread::sleep_for(std::chrono::milliseconds(16));
+		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+		std::this_thread::sleep_for(std::chrono::milliseconds(16) - (end-start));
 	}
 
 	SDL_GL_DeleteContext(context);
@@ -231,6 +272,7 @@ void Display()
 
 void drawSphere(PxSphereGeometry sphere, PxTransform transform)
 {
+	glColor3f(1.0f, 0.5f, 0.0f);
 	GLUquadric *w = gluNewQuadric();
 
 	glPushMatrix();
@@ -249,6 +291,7 @@ void drawSphere(PxSphereGeometry sphere, PxTransform transform)
 
 void drawCapsule(PxCapsuleGeometry cap, PxTransform transform)
 {
+	glColor3f(0.5f, 0.0f, 1.0f);
 	GLUquadric *w = gluNewQuadric();
 
 	glPushMatrix();
@@ -273,6 +316,7 @@ void drawCapsule(PxCapsuleGeometry cap, PxTransform transform)
 
 void drawMesh(PxConvexMeshGeometry mesh, PxTransform transform)
 {
+	glColor3f(0.25f, 1.0f, 0.5f);
 	glPushMatrix();
 
 	glTransformPx(transform);
@@ -318,31 +362,46 @@ void drawMesh(PxConvexMeshGeometry mesh, PxTransform transform)
 
 void drawMesh(PxTriangleMeshGeometry mesh, PxTransform transform)
 {
+	glColor3f(0.5f, 0.25f, 1.0f);
 	glPushMatrix();
 
 	glTransformPx(transform);
 
-	glBegin(GL_TRIANGLES);
-	const vec3* vertices = mesh.triangleMesh->getVertices();
-	if (mesh.triangleMesh->getTriangleMeshFlags() & physx::PxTriangleMeshFlag::eHAS_16BIT_TRIANGLE_INDICES)
+	// Draw the mesh here
+	PxU32 numTriangles = mesh.triangleMesh->getNbTriangles();
+	const PxVec3* vertices = mesh.triangleMesh->getVertices();
+	if (mesh.triangleMesh->getTriangleMeshFlags() & PxTriangleMeshFlag::eHAS_16BIT_TRIANGLE_INDICES)
 	{
-		physx::PxU16 *indices = (physx::PxU16*)mesh.triangleMesh->getTriangles();
-		for (unsigned short i = 0; i < mesh.triangleMesh->getNbTriangles(); i++)
+		PxU16* indices = (PxU16*)mesh.triangleMesh->getTriangles();
+		glBegin(GL_TRIANGLES);
+		for (PxU32 i = 0; i < numTriangles; i++)
 		{
-			glVertex3f(vertices[indices[i]].x, vertices[indices[i]].y, vertices[indices[i]].z);
+			glTexCoord2f(0.0f, 1.0f);
+			PxU16 j = indices[3 * i];
+			glVertex3f(vertices[indices[3 * i]].x, vertices[indices[3 * i]].y, vertices[indices[3 * i]].z);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex3f(vertices[indices[3 * i+1]].x, vertices[indices[3 * i+1]].y, vertices[indices[3 * i+1]].z);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(vertices[indices[3 * i+2]].x, vertices[indices[3 * i+2]].y, vertices[indices[3 * i+2]].z);
 		}
+		glEnd();
 	}
 	else
 	{
-		physx::PxU32 *indices = (physx::PxU32*)mesh.triangleMesh->getTriangles();
-		for (unsigned int i = 0; i < mesh.triangleMesh->getNbTriangles(); i++)
+		PxU32* indices = (PxU32*)mesh.triangleMesh->getTriangles();
+		glBegin(GL_TRIANGLES);
+		for (PxU32 i = 0; i < numTriangles; i++)
 		{
-			glVertex3f(vertices[indices[i]].x, vertices[indices[i]].y, vertices[indices[i]].z);
+			glTexCoord2f(0.0f, 1.0f);
+			PxU32 j = indices[3 * i];
+			glVertex3f(vertices[indices[3 * i]].x, vertices[indices[3 * i]].y, vertices[indices[3 * i]].z);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex3f(vertices[indices[3 * i+1]].x, vertices[indices[3 * i+1]].y, vertices[indices[3 * i+1]].z);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(vertices[indices[3 * i+2]].x, vertices[indices[3 * i+2]].y, vertices[indices[3 * i+2]].z);
 		}
+		glEnd();
 	}
-	glEnd();
-	 
-
 	glPopMatrix();
 }
 

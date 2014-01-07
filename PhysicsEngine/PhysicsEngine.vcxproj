@@ -84,11 +84,13 @@
     <ClInclude Include="PxGL.h" />
     <ClInclude Include="MaterialProperties.h" />
     <ClInclude Include="PhysicsEngine.h" />
+    <ClInclude Include="RenderEngine.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="PhysicsEngine.cpp" />
+    <ClCompile Include="RenderEngine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

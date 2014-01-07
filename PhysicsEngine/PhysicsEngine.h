@@ -29,6 +29,7 @@ private:
 		physx::PxRigidDynamic *actor;
 		physx::PxReal LiftCoefficient;
 		physx::PxReal DragCoefficient;
+		physx::PxReal SurfaceArea;
 		void ApplyLiftAndDrag();
 	};
 
@@ -95,7 +96,7 @@ public:
 	physx::PxRigidDynamic* addRigidDynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f);
 
 	// Adds a rigid dynamic actor to the scene and applies aerodynamics to it at each update
-	physx::PxRigidDynamic *addRigidAerodynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f, physx::PxReal lift = 0.0f, physx::PxReal drag = 0.0f);
+	physx::PxRigidDynamic *addRigidAerodynamic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, physx::PxReal Mass, physx::PxVec3 MomentOfInertia, physx::PxVec3 initialLinearVelocity, physx::PxVec3 initialAngularVelocity, Material mat, physx::PxReal linearDamping = 0.0f, physx::PxReal angularDamping = 0.0f, physx::PxReal lift = 0.0f, physx::PxReal drag = 0.0f, physx::PxReal planformArea = PI);
 
 	// Adds a rigid static actor to the scene, and returns a pointer reference to it
 	physx::PxRigidStatic* addRigidStatic(physx::PxVec3 position, physx::PxQuat orientation, physx::PxGeometry **components, physx::PxVec3 *componentLinearOffsets, physx::PxQuat *componentAngularOffsets, physx::PxU32 numComponents, Material mat);
