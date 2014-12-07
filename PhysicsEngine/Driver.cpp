@@ -377,7 +377,6 @@ void drawMesh(PxTriangleMeshGeometry mesh, PxTransform transform)
 		for (PxU32 i = 0; i < numTriangles; i++)
 		{
 			glTexCoord2f(0.0f, 1.0f);
-			PxU16 j = indices[3 * i];
 			glVertex3f(vertices[indices[3 * i]].x, vertices[indices[3 * i]].y, vertices[indices[3 * i]].z);
 			glTexCoord2f(1.0f, 0.0f);
 			glVertex3f(vertices[indices[3 * i+1]].x, vertices[indices[3 * i+1]].y, vertices[indices[3 * i+1]].z);
@@ -393,7 +392,6 @@ void drawMesh(PxTriangleMeshGeometry mesh, PxTransform transform)
 		for (PxU32 i = 0; i < numTriangles; i++)
 		{
 			glTexCoord2f(0.0f, 1.0f);
-			PxU32 j = indices[3 * i];
 			glVertex3f(vertices[indices[3 * i]].x, vertices[indices[3 * i]].y, vertices[indices[3 * i]].z);
 			glTexCoord2f(1.0f, 0.0f);
 			glVertex3f(vertices[indices[3 * i+1]].x, vertices[indices[3 * i+1]].y, vertices[indices[3 * i+1]].z);
